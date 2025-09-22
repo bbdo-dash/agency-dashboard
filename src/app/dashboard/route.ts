@@ -1,5 +1,7 @@
-// Return fallback data if the API call fails
-return [
+import { NextResponse } from 'next/server';
+
+// Mock data for trends
+const mockTrendsData = [
   {
     id: '1',
     title: 'elbe leiche',
@@ -42,4 +44,17 @@ return [
     searchVolume: '2.000+',
     rank: 3
   }
-]; 
+];
+
+export async function GET() {
+  try {
+    // Return mock trends data
+    return NextResponse.json(mockTrendsData);
+  } catch (error) {
+    console.error('Error fetching trends data:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch trends data' },
+      { status: 500 }
+    );
+  }
+} 
