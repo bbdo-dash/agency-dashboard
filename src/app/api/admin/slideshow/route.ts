@@ -42,7 +42,7 @@ export async function GET() {
           size: 0,
           lastModified: 0
         }))
-        .sort((a: unknown, b: unknown) => {
+        .sort((a: any, b: any) => {
           const aNum = parseInt(a.name.match(/\d+/)?.[0] || '0');
           const bNum = parseInt(b.name.match(/\d+/)?.[0] || '0');
           return aNum - bNum;
