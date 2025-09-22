@@ -90,7 +90,7 @@ export async function GET(
 
     return NextResponse.json({ feed });
       } catch (_error) {
-    console.error('Error loading RSS feed:', error);
+    console.error('Error loading RSS feed:', _error);
     return NextResponse.json(
       { error: 'Failed to load RSS feed' },
       { status: 500 }
@@ -156,7 +156,7 @@ export async function PUT(
 
     return NextResponse.json({ feed: updatedFeed });
       } catch (_error) {
-    console.error('Error updating RSS feed:', error);
+    console.error('Error updating RSS feed:', _error);
     return NextResponse.json(
       { error: 'Failed to update RSS feed' },
       { status: 500 }
@@ -193,7 +193,7 @@ export async function PATCH(
 
     return NextResponse.json({ feed: updatedFeed });
       } catch (_error) {
-    console.error('Error updating RSS feed:', error);
+    console.error('Error updating RSS feed:', _error);
     return NextResponse.json(
       { error: 'Failed to update RSS feed' },
       { status: 500 }
@@ -223,7 +223,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'RSS feed deleted successfully' });
       } catch (_error) {
-    console.error('Error deleting RSS feed:', error);
+    console.error('Error deleting RSS feed:', _error);
     return NextResponse.json(
       { error: 'Failed to delete RSS feed' },
       { status: 500 }
