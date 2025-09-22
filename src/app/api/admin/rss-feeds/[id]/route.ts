@@ -101,7 +101,7 @@ export async function GET(
 // PUT /api/admin/rss-feeds/[id] - Update RSS feed
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { url, title, description } = await request.json();
@@ -123,8 +123,9 @@ export async function PUT(
       );
     }
 
+    const { id } = await params;
     const feeds = await loadFeeds();
-    const feedIndex = feeds.findIndex(f => f.id === params.id);
+    const feedIndex = feeds.findIndex(f => f.id === id);
 
     if (feedIndex === -1) {
       return NextResponse.json(
