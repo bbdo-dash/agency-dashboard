@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
             // Upload with new name
             await put(`slideshow/${newName}`, buffer, {
               access: 'public',
-              contentType: blob.contentType || 'image/jpeg'
+              contentType: 'image/jpeg'
             });
             
             // Delete the old blob
