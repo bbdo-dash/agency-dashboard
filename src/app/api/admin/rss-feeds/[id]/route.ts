@@ -53,7 +53,7 @@ async function loadFeeds(): Promise<RSSFeed[]> {
       const feeds = await kv.get<RSSFeed[]>('rss_feeds');
       return feeds || [];
       } catch (_error) {
-      console.error('Error loading feeds from KV storage:', error);
+      console.error('Error loading feeds from KV storage:', _error);
       return [];
     }
   }
