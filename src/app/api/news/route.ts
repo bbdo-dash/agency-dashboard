@@ -164,14 +164,14 @@ export async function GET(request: NextRequest) {
         const parser = new XMLParser({
           ignoreAttributes: false,
           attributeNamePrefix: '@_',
-          isArray: (name, jpath) => name === 'item' || name === 'media:content' || name === 'enclosure'
+          isArray: (name) => name === 'item' || name === 'media:content' || name === 'enclosure'
         });
         const parsed = parser.parse(xml);
         const channel = parsed?.rss?.channel;
         const items = channel?.item || [];
     
     // Helper: extract first image URL from item via media:content, enclosure, or HTML content
-    const extractImage = (item: any): string | undefined => {
+    const extractImage = (item: unknown): string | undefined => {
       // Check media:content first
       const media = item?.['media:content'] || item?.media?.content;
       if (Array.isArray(media) && media.length > 0) {
@@ -255,7 +255,7 @@ export async function GET(request: NextRequest) {
     
         const allItems = items;
         const mapped: NewsItem[] = allItems
-          .map((item: any, index: number) => {
+          .map((item: unknown, index: number) => {
             const title: string = item?.title ?? 'Untitled';
             const link: string = item?.link ?? '#';
             const pubDate: string = item?.pubDate ?? new Date().toISOString();
@@ -300,7 +300,7 @@ export async function GET(request: NextRequest) {
         allArticles.push(...limitedMapped);
         console.log(`✅ Added ${limitedMapped.length} articles from ${feed.title}`);
         
-      } catch (error) {
+      } catch (_error) {
         console.error(`❌ Error processing ${feed.title}:`, error);
         // Continue with other feeds
       }

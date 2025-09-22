@@ -41,7 +41,7 @@ async function loadFeeds(): Promise<RSSFeed[]> {
       await ensureDataDirectory();
       const data = await fs.readFile(FEEDS_FILE, 'utf-8');
       return JSON.parse(data);
-    } catch (error) {
+      } catch (_error) {
       return [];
     }
   } else {
@@ -52,7 +52,7 @@ async function loadFeeds(): Promise<RSSFeed[]> {
     try {
       const feeds = await kv.get<RSSFeed[]>('rss_feeds');
       return feeds || [];
-    } catch (error) {
+      } catch (_error) {
       console.error('Error loading feeds from KV storage:', error);
       return [];
     }
@@ -88,7 +88,7 @@ export async function GET(
     }
 
     return NextResponse.json({ feed });
-  } catch (error) {
+      } catch (_error) {
     console.error('Error loading RSS feed:', error);
     return NextResponse.json(
       { error: 'Failed to load RSS feed' },
@@ -153,7 +153,7 @@ export async function PUT(
     await saveFeeds(feeds);
 
     return NextResponse.json({ feed: updatedFeed });
-  } catch (error) {
+      } catch (_error) {
     console.error('Error updating RSS feed:', error);
     return NextResponse.json(
       { error: 'Failed to update RSS feed' },
@@ -189,7 +189,7 @@ export async function PATCH(
     await saveFeeds(feeds);
 
     return NextResponse.json({ feed: updatedFeed });
-  } catch (error) {
+      } catch (_error) {
     console.error('Error updating RSS feed:', error);
     return NextResponse.json(
       { error: 'Failed to update RSS feed' },
@@ -218,7 +218,7 @@ export async function DELETE(
     await saveFeeds(feeds);
 
     return NextResponse.json({ message: 'RSS feed deleted successfully' });
-  } catch (error) {
+      } catch (_error) {
     console.error('Error deleting RSS feed:', error);
     return NextResponse.json(
       { error: 'Failed to delete RSS feed' },

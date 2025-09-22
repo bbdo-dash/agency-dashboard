@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import DarkModeToggle from "../components/DarkModeToggle";
 
 // Load the Outfit variable font from local files
 const outfit = localFont({

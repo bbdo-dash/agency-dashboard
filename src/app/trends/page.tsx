@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { Metadata } from 'next';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { NewsItem } from "@/types/dashboard";

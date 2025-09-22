@@ -41,7 +41,7 @@ async function loadFeeds(): Promise<RSSFeed[]> {
       await ensureDataDirectory();
       const data = await fs.readFile(FEEDS_FILE, 'utf-8');
       return JSON.parse(data);
-    } catch (error) {
+      } catch (_error) {
       // Return default feeds if file doesn't exist
       return [
         {
@@ -77,7 +77,7 @@ async function loadFeeds(): Promise<RSSFeed[]> {
         ];
       }
       return feeds;
-    } catch (error) {
+      } catch (_error) {
       console.error('Error loading feeds from KV storage:', error);
       return [];
     }
@@ -106,7 +106,7 @@ export async function GET() {
   try {
     const feeds = await loadFeeds();
     return NextResponse.json({ feeds });
-  } catch (error) {
+      } catch (_error) {
     console.error('Error loading RSS feeds:', error);
     return NextResponse.json(
       { error: 'Failed to load RSS feeds' },
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
     await saveFeeds(feeds);
 
     return NextResponse.json({ feed: newFeed }, { status: 201 });
-  } catch (error) {
+      } catch (_error) {
     console.error('Error creating RSS feed:', error);
     return NextResponse.json(
       { error: 'Failed to create RSS feed' },

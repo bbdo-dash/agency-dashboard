@@ -5,11 +5,7 @@ import EventEditor from "./EventEditor";
 import RSSFeedManager from "./RSSFeedManager";
 import SlideshowManager from "./SlideshowManager";
 
-interface AdminSettingsModalProps {
-  // Add properties here if needed in the future
-}
-
-export default function AdminSettingsModal(_props: AdminSettingsModalProps) {
+export default function AdminSettingsModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'appearance' | 'events' | 'news' | 'slideshow'>('appearance');
   const [showEventEditor, setShowEventEditor] = useState(false);

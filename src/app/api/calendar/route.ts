@@ -34,7 +34,7 @@ export async function GET() {
     const data = await response.json();
     
     // Transform the data to match your CalendarEvent type
-    const events = data.items.map((event: any) => ({
+    const events = data.items.map((event: unknown) => ({
       id: event.id,
       title: event.summary,
       description: event.description || '',
