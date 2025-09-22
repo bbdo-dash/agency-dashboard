@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { loadEventsFromCSV, getEventsCSVPath, parseCSVToEvents } from '@/lib/csvParser';
+import { loadEventsFromCSV, getEventsCSVPath } from '@/lib/csvParser';
 import { writeFile } from 'fs/promises';
 import { CalendarEvent } from '@/types/dashboard';
 import { kv } from '@vercel/kv';

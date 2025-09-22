@@ -43,9 +43,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate URL
-    let parsedUrl;
     try {
-      parsedUrl = new URL(url);
+      new URL(url);
     } catch {
       return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
     }
@@ -70,7 +69,7 @@ export async function POST(request: NextRequest) {
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: '@_',
-      isArray: (name, jpath) => name === 'item' || name === 'category'
+          isArray: (name) => name === 'item' || name === 'category'
     });
 
     const parsed = parser.parse(xmlContent);
@@ -121,7 +120,7 @@ export async function POST(request: NextRequest) {
     let hasEnclosures = false;
     let hasCategories = false;
 
-    items.forEach((item: any) => {
+    items.forEach((item: unknown) => {
       // Analyze titles and descriptions
       if (item.title) {
         titles.push(item.title);
@@ -145,7 +144,7 @@ export async function POST(request: NextRequest) {
       if (item.category) {
         hasCategories = true;
         const categories = Array.isArray(item.category) ? item.category : [item.category];
-        categories.forEach((cat: any) => {
+        categories.forEach((cat: unknown) => {
           const categoryName = typeof cat === 'string' ? cat : (cat['#text'] || cat.toString());
           if (!categoryCounts[categoryName]) {
             categoryCounts[categoryName] = { count: 0, examples: [] };
@@ -202,7 +201,7 @@ export async function POST(request: NextRequest) {
 
     // Language analysis
     const languages = new Set<string>();
-    items.forEach((item: any) => {
+    items.forEach((item: unknown) => {
       if (item.language) {
         languages.add(item.language);
       }
@@ -259,7 +258,7 @@ export async function POST(request: NextRequest) {
     // Check images (most important for dashboard)
     // Count actual articles with images
     let articlesWithImages = 0;
-    items.forEach((item: any) => {
+    items.forEach((item: unknown) => {
       // Check for images in various formats
       const hasMediaContent = item?.['media:content'] || item?.media?.content;
       const hasEnclosure = item?.enclosure;

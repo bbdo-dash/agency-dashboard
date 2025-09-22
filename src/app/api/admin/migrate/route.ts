@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { migrateAllDataToKV } from '@/lib/migration';
 
 // POST - Migrate all data to KV Storage
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Only allow migration in production
     if (process.env.NODE_ENV === 'development') {

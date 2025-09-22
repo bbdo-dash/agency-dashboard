@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { NewspaperIcon, PhotoIcon, CalendarIcon, DocumentIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import type { NewsItem, InstagramPost, CalendarEvent } from '@/types/dashboard';
 import ImageViewer from '@/components/ImageViewer';
@@ -83,23 +82,6 @@ function NewsCard({ item, idx, isNewsAnimating }: { item: NewsItem; idx: number;
   );
 }
 
-// CSS for animations
-const eventExitAnimation = {
-  opacity: 0,
-  transform: 'translateY(-20px)',
-  transition: 'opacity 500ms ease-out, transform 500ms ease-out'
-};
-
-const eventEnterAnimation = {
-  opacity: 1,
-  transform: 'translateY(0)',
-  transition: 'opacity 500ms ease-out, transform 500ms ease-out'
-};
-
-const eventInitialHiddenState = {
-  opacity: 0,
-  transform: 'translateY(20px)'
-};
 
 // Refresh interval in milliseconds (5 minutes)
 const REFRESH_INTERVAL = 5 * 60 * 1000;
@@ -184,8 +166,6 @@ export default function Home() {
 
   // Add state for current month index
   const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
-  const [isAutoScrollingEnabled, setIsAutoScrollingEnabled] = useState(true);
-  const [brokenImageUrls, setBrokenImageUrls] = useState<string[]>([]);
   // Animation states
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationDirection, setAnimationDirection] = useState('next');
@@ -396,7 +376,6 @@ export default function Home() {
     
     if (totalHeight <= visibleHeight) return; // No need to scroll if content fits
     
-    const scrollDuration = 10000; // Time to complete one full scroll (ms)
     const scrollStep = 1; // Pixels to scroll per frame
     const scrollDelay = 30; // Time between frames (ms)
     

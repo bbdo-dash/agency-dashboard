@@ -16,14 +16,6 @@ const RSS_FEEDS = [
 // Default image for when we can't extract one from the RSS feed
 const DEFAULT_PORSCHE_IMAGE = 'https://scontent.cdninstagram.com/v/t51.2885-19/325385406_1600607227079024_7537725051693415601_n.jpg?stp=dst-jpg_s240x240_tt6&_nc_ht=scontent.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2QHPoUmEtaM0AFozeiTKa4Y_ZzP-KP_6ZjhTVzeniMFrbQKrriHDzItjcYJCtVNiuUs&_nc_ohc=HcaB-npmDZ0Q7kNvgFFTOy8';
 
-interface RSSItem {
-  title: string;
-  description: string;
-  link: string;
-  pubDate: string;
-  guid: string;
-  image: string;
-}
 
 interface FeedData {
   title: string;
@@ -54,7 +46,7 @@ export async function fetchInstagramPostsFromRSS(): Promise<FeedData[]> {
         const parser = new XMLParser({
           ignoreAttributes: false,
           attributeNamePrefix: "@_",
-          isArray: (name, jpath) => name === 'item'
+          isArray: (name) => name === 'item'
         });
         
         const result = parser.parse(xmlText);
@@ -66,7 +58,7 @@ export async function fetchInstagramPostsFromRSS(): Promise<FeedData[]> {
         console.log(`Found ${items.length} items in the RSS feed: ${feed.title}`);
         
         // Map the items to our InstagramPost format
-        const posts = items.map((item: any, index: number) => {
+        const posts = items.map((item: unknown, index: number) => {
           let imageUrl = '';
           
           // Try to get image from various locations

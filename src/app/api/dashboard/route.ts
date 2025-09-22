@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchInstagramPostsFromRSS } from '@/services/instagramService';
-import { NewsItem, InstagramPost, CalendarEvent } from '@/types/dashboard';
+import { CalendarEvent } from '@/types/dashboard';
 import { loadEventsFromCSV, getEventsCSVPath } from '@/lib/csvParser';
 
 // Fallback news data when the News API doesn't return results
@@ -134,7 +134,7 @@ async function getNewsData() {
       if (data.articles.length > 0) {
         console.log(`Successfully fetched ${data.articles.length} news items`);
         // Map search volume if not already present
-        return data.articles.map((article: any, index: number) => ({
+        return data.articles.map((article: unknown, index: number) => ({
           ...article,
           rank: article.rank || (index + 1),
           searchVolume: article.searchVolume || `${Math.floor(Math.random() * 500) + 100}K+` // Ensure we have search volume
