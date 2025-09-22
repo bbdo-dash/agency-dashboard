@@ -22,7 +22,7 @@ export async function GET() {
     const data = await response.json();
     
     // Transform the data to match your InstagramPost type
-    const posts = data.data.map((post: unknown) => ({
+    const posts = data.data.map((post: any) => ({
       id: post.id,
       caption: post.caption || '',
       imageUrl: post.media_type === 'VIDEO' ? post.thumbnail_url : post.media_url,
