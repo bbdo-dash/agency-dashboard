@@ -230,8 +230,7 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
             <input
               ref={folderInputRef}
               type="file"
-              webkitdirectory="true"
-              directory="true"
+              {...({ webkitdirectory: 'true', directory: 'true' } as any)}
               multiple
               accept=".png,.jpg,.jpeg"
               onChange={handleFolderSelect}

@@ -58,7 +58,7 @@ export async function fetchInstagramPostsFromRSS(): Promise<FeedData[]> {
         console.log(`Found ${items.length} items in the RSS feed: ${feed.title}`);
         
         // Map the items to our InstagramPost format
-        const posts = items.map((item: unknown, index: number) => {
+        const posts = items.map((item: any, index: number) => {
           let imageUrl = '';
           
           // Try to get image from various locations

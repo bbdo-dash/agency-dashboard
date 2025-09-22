@@ -27,7 +27,7 @@ async function loadConfiguredFeeds(): Promise<RSSFeed[]> {
     const data = await fs.readFile(FEEDS_FILE, 'utf-8');
     const feeds = JSON.parse(data);
     return feeds.filter((feed: RSSFeed) => feed.isActive);
-  } catch (error) {
+  } catch (_error) {
     // Return default feed if no configuration exists
     return [{
       id: 'horizont-news',
@@ -171,7 +171,7 @@ export async function GET(request: NextRequest) {
         const items = channel?.item || [];
     
     // Helper: extract first image URL from item via media:content, enclosure, or HTML content
-    const extractImage = (item: unknown): string | undefined => {
+    const extractImage = (item: any): string | undefined => {
       // Check media:content first
       const media = item?.['media:content'] || item?.media?.content;
       if (Array.isArray(media) && media.length > 0) {
@@ -255,7 +255,7 @@ export async function GET(request: NextRequest) {
     
         const allItems = items;
         const mapped: NewsItem[] = allItems
-          .map((item: unknown, index: number) => {
+          .map((item: any, index: number) => {
             const title: string = item?.title ?? 'Untitled';
             const link: string = item?.link ?? '#';
             const pubDate: string = item?.pubDate ?? new Date().toISOString();
@@ -301,7 +301,7 @@ export async function GET(request: NextRequest) {
         console.log(`✅ Added ${limitedMapped.length} articles from ${feed.title}`);
         
       } catch (_error) {
-        console.error(`❌ Error processing ${feed.title}:`, error);
+        console.error(`❌ Error processing ${feed.title}:`, _error);
         // Continue with other feeds
       }
     }

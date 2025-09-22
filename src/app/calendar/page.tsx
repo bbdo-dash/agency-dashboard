@@ -1,5 +1,5 @@
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { CalendarIcon, MapPinIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import type { CalendarEvent } from '@/types/dashboard';
 
 async function getCalendarData() {
@@ -66,17 +66,12 @@ export default async function CalendarPage() {
                       <MapPinIcon className="h-4 w-4 mr-1" />
                       <span>{event.location}</span>
                     </div>
-                    {event.attendees && (
-                      <div className="flex items-center">
-                        <UserGroupIcon className="h-4 w-4 mr-1" />
-                        <span>{event.attendees.toLocaleString()} attendees</span>
-                      </div>
-                    )}
+                    {/* Attendees not available in current CalendarEvent interface */}
                   </div>
                 </div>
                 <div className="ml-4">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                    {event.category}
+                    Event
                   </span>
                 </div>
               </div>
