@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     let hasEnclosures = false;
     let hasCategories = false;
 
-    items.forEach((item: unknown) => {
+    items.forEach((item: any) => {
       // Analyze titles and descriptions
       if (item.title) {
         titles.push(item.title);
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
       if (item.category) {
         hasCategories = true;
         const categories = Array.isArray(item.category) ? item.category : [item.category];
-        categories.forEach((cat: unknown) => {
+        categories.forEach((cat: any) => {
           const categoryName = typeof cat === 'string' ? cat : (cat['#text'] || cat.toString());
           if (!categoryCounts[categoryName]) {
             categoryCounts[categoryName] = { count: 0, examples: [] };
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
 
     // Language analysis
     const languages = new Set<string>();
-    items.forEach((item: unknown) => {
+    items.forEach((item: any) => {
       if (item.language) {
         languages.add(item.language);
       }
@@ -258,7 +258,7 @@ export async function POST(request: NextRequest) {
     // Check images (most important for dashboard)
     // Count actual articles with images
     let articlesWithImages = 0;
-    items.forEach((item: unknown) => {
+    items.forEach((item: any) => {
       // Check for images in various formats
       const hasMediaContent = item?.['media:content'] || item?.media?.content;
       const hasEnclosure = item?.enclosure;
