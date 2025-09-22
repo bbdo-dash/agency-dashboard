@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
       // Extract and count common tags from content
       const content = (item.description || item.title || '').toLowerCase();
       const words = content.match(/\b\w{3,}\b/g) || [];
-      words.forEach(word => {
+      words.forEach((word: string) => {
         tagCounts[word] = (tagCounts[word] || 0) + 1;
       });
     });
