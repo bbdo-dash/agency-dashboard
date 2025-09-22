@@ -135,7 +135,6 @@ export async function PUT(
     }
 
     // Check if URL already exists (excluding current feed)
-    const { id } = await params;
     const existingFeed = feeds.find(feed => feed.url === url && feed.id !== id);
     if (existingFeed) {
       return NextResponse.json(
