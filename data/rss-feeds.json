@@ -1,0 +1,29 @@
+[
+  {
+    "id": "horizont-news",
+    "url": "https://www.horizont.net/news/feed/",
+    "title": "HORIZONT News",
+    "description": "Aktuelle Nachrichten aus der Werbebranche",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2025-09-19T12:57:53.248Z"
+  },
+  {
+    "id": "rss-1758286708455-jhq036bq6",
+    "url": "https://www.mrduesseldorf.de/feed/",
+    "title": "Düsseldorf News",
+    "description": "Newsfeed von Mr Düsseldorf",
+    "isActive": true,
+    "createdAt": "2025-09-19T12:58:28.455Z",
+    "updatedAt": "2025-09-19T12:58:28.455Z"
+  },
+  {
+    "id": "rss-1758287255598-hy5a8isc0",
+    "url": "https://rss.sueddeutsche.de/rss/Alles",
+    "title": "Süddeutsche Zeitung",
+    "description": "",
+    "isActive": true,
+    "createdAt": "2025-09-19T13:07:35.598Z",
+    "updatedAt": "2025-09-19T13:07:35.598Z"
+  }
+]

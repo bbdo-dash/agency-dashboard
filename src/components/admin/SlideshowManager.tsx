@@ -1,0 +1,352 @@
+"use client";
+
+import { useState, useEffect, useRef, useCallback } from "react";
+
+interface SlideshowImage {
+  name: string;
+  path: string;
+  size?: number;
+  lastModified?: number;
+}
+
+interface SlideshowManagerProps {
+  onClose: () => void;
+}
+
+export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
+  const [images, setImages] = useState<SlideshowImage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [reordering, setReordering] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+
+  const loadImages = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/slideshow');
+      if (response.ok) {
+        const data = await response.json();
+        setImages(data.images || []);
+      } else {
+        console.error('Failed to load images');
+      }
+    } catch (error) {
+      console.error('Error loading images:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Load images on mount
+  useEffect(() => {
+    loadImages();
+  }, [loadImages]);
+
+  const handleFileUpload = async (files: FileList | null, replaceAll: boolean = false) => {
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('replaceAll', replaceAll.toString());
+      
+      Array.from(files).forEach(file => {
+        formData.append('images', file);
+      });
+
+      const response = await fetch('/api/admin/slideshow', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message);
+        await loadImages(); // Reload images
+        // Signal to ImageViewer to refresh
+        localStorage.setItem('slideshowUpdated', 'true');
+        window.dispatchEvent(new StorageEvent('storage', { key: 'slideshowUpdated' }));
+      } else {
+        const error = await response.json();
+        alert(`Fehler beim Hochladen: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      alert('Fehler beim Hochladen der Dateien');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFileUpload(e.target.files, false);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleFolderSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFileUpload(e.target.files, true);
+    }
+    if (folderInputRef.current) folderInputRef.current.value = '';
+  };
+
+  const handleReplaceAll = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleAddImages = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleDeleteImage = async (filename: string) => {
+    if (!confirm('Möchten Sie dieses Bild wirklich löschen?')) return;
+
+    try {
+      const response = await fetch(`/api/admin/slideshow?filename=${encodeURIComponent(filename)}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        await loadImages(); // Reload images
+        // Signal to ImageViewer to refresh
+        localStorage.setItem('slideshowUpdated', 'true');
+        window.dispatchEvent(new StorageEvent('storage', { key: 'slideshowUpdated' }));
+      } else {
+        const error = await response.json();
+        alert(`Fehler beim Löschen: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      alert('Fehler beim Löschen des Bildes');
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setHoverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setHoverIndex(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDragIndex(null);
+      setHoverIndex(null);
+      return;
+    }
+
+    const newImages = [...images];
+    const draggedImage = newImages[dragIndex];
+    newImages.splice(dragIndex, 1);
+    newImages.splice(dropIndex, 0, draggedImage);
+    
+    setImages(newImages);
+    setDragIndex(null);
+    setHoverIndex(null);
+
+    // Save new order to server
+    try {
+      setReordering(true);
+      const imageOrder = newImages.map(img => img.name);
+      const response = await fetch('/api/admin/slideshow/reorder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ imageOrder }),
+      });
+
+      if (!response.ok) {
+        // Revert on error
+        await loadImages();
+        alert('Fehler beim Speichern der neuen Reihenfolge');
+      } else {
+        // Signal to ImageViewer to refresh
+        localStorage.setItem('slideshowUpdated', 'true');
+        window.dispatchEvent(new StorageEvent('storage', { key: 'slideshowUpdated' }));
+      }
+    } catch (error) {
+      console.error('Error reordering images:', error);
+      await loadImages(); // Revert on error
+      alert('Fehler beim Speichern der neuen Reihenfolge');
+    } finally {
+      setReordering(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-600 dark:text-gray-400">Lade Bilder...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 max-h-full overflow-y-auto">
+      <div className="flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          Slideshow Verwaltung
+        </h3>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Upload Controls */}
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+            <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+              📁 Ordner hochladen (ersetzt alle)
+            </h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Alle aktuellen Bilder werden durch die neuen ersetzt
+            </p>
+            <input
+              ref={folderInputRef}
+              type="file"
+              webkitdirectory="true"
+              directory="true"
+              multiple
+              accept=".png,.jpg,.jpeg"
+              onChange={handleFolderSelect}
+              className="hidden"
+            />
+            <button
+              onClick={() => folderInputRef.current?.click()}
+              disabled={uploading}
+              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            >
+              {uploading ? 'Wird hochgeladen...' : 'Ordner hochladen'}
+            </button>
+          </div>
+
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+            <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+              🖼️ Bilder hinzufügen
+            </h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Neue Bilder zur bestehenden Slideshow hinzufügen
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".png,.jpg,.jpeg"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <button
+              onClick={handleAddImages}
+              disabled={uploading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            >
+              {uploading ? 'Wird hochgeladen...' : 'Bilder hinzufügen'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Image Grid */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h4 className="font-medium text-gray-900 dark:text-white">
+            Aktuelle Slideshow ({images.length} Bilder)
+          </h4>
+          {reordering && (
+            <div className="text-sm text-blue-600 dark:text-blue-400">
+              Reihenfolge wird gespeichert...
+            </div>
+          )}
+        </div>
+
+        {images.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            Keine Bilder in der Slideshow
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 max-h-96 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+            {images.map((image, index) => (
+              <div
+                key={image.name}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                className={`relative group cursor-move border-2 rounded-lg overflow-hidden transition-all ${
+                  dragIndex === index
+                    ? 'opacity-50 scale-95'
+                    : hoverIndex === index
+                    ? 'border-blue-500 scale-105'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                }`}
+              >
+                <img
+                  src={image.path}
+                  alt={`Slide ${index + 1}`}
+                  className="w-full h-32 object-cover"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity space-x-2">
+                    <span className="text-white text-xs font-medium bg-black bg-opacity-50 px-2 py-1 rounded">
+                      #{index + 1}
+                    </span>
+                    <button
+                      onClick={() => handleDeleteImage(image.name)}
+                      className="bg-red-600 hover:bg-red-700 text-white p-1 rounded"
+                      title="Bild löschen"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Instructions */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg sticky bottom-0">
+        <h5 className="font-medium text-blue-900 dark:text-blue-200 mb-2">
+          💡 Anleitung
+        </h5>
+        <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+          <li>• <strong>Drag & Drop:</strong> Ziehen Sie Bilder, um die Reihenfolge zu ändern</li>
+          <li>• <strong>Löschen:</strong> Klicken Sie auf das rote X-Symbol zum Löschen</li>
+          <li>• <strong>Ordner hochladen:</strong> Ersetzt alle bestehenden Bilder</li>
+          <li>• <strong>Bilder hinzufügen:</strong> Fügt neue Bilder zur bestehenden Slideshow hinzu</li>
+          <li>• <strong>Scrollen:</strong> Scrollen Sie in der Bildergalerie, um alle Slides zu sehen</li>
+        </ul>
+      </div>
+    </div>
+  );
+}

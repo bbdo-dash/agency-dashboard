@@ -1,0 +1,19 @@
+Datenquellen-Übersicht (Agency Dashboard)
+
+- Kalender (Events)
+  - Quelle: CSV-Dateien in `docs/`
+    - `Key International Advertising Events and Conferences.csv`
+    - `Upcoming Advertising Events and Conferences in Germany.csv`
+  - Nutzung: CSVs dienen als Grundlage für die Event-Liste im Dashboard/Kalender-Widget.
+
+- Instagram (RSS Feed)
+  - Quelle: RSS-Feed über externen Dienst wie `rss.app`
+  - Nutzung: Beiträge werden aus dem RSS-Feed gelesen und im Instagram-Bereich dargestellt.
+
+- News (Nachrichtenfeed)
+  - Quelle: RSS-Feed von „HORIZONT“ (`https://www.horizont.net/news/feed/`)
+  - Nutzung: Alle News stammen ausschließlich aus diesem RSS-Feed; keine externen API-Keys mehr erforderlich.
+
+- MoMe Content (Bild-Slideshow)
+  - Quelle: Bilder aus `public/uploads/`
+  - Nutzung: Bilder werden für die Slideshow/Galerie im Dashboard verwendet.

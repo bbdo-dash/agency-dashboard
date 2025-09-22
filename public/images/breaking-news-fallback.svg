@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#e01e1e"/>
+  <pattern id="dotPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+    <circle cx="10" cy="10" r="3" fill="#a50000"/>
+  </pattern>
+  <path d="M50,50 L462,50 L462,462 L50,462 Z" fill="url(#dotPattern)"/>
+  <text x="256" y="200" font-family="Arial, sans-serif" font-size="60" font-weight="bold" fill="white" text-anchor="middle">BREAKING</text>
+  <text x="256" y="290" font-family="Arial, sans-serif" font-size="100" font-weight="bold" fill="white" text-anchor="middle">NEWS</text>
+</svg> 

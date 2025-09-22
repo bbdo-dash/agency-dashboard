@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --font-family: 'Outfit', sans-serif;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+@layer base {
+  body {
+    @apply transition-colors duration-200;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+
+  /* Scale rem baseline for large displays */
+  html { font-size: 16px; }
+  @screen tv { html { font-size: 18px; } }   /* ~12.5% up for 1080p TVs */
+  @screen 2k { html { font-size: 20px; } }   /* ~25% up for 1440p/2K */
+  @screen 4k { html { font-size: 24px; } }   /* ~50% up for 4K */
+}
+
+@layer components {
+  .dashboard-card {
+    @apply bg-white dark:bg-gray-900 rounded-lg shadow p-1.5 sm:p-2 flex flex-col;
+    max-height: calc(100% - 10px);
+  }
+  
+  .dashboard-section {
+    @apply m-4;
+  }
+  
+  .card-title {
+    @apply text-lg font-bold text-gray-900 dark:text-white mb-4;
+  }
+  
+  .card-content {
+    @apply space-y-3;
+  }
+}
+
+/* Add to ensure full height and prevent scrolling */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-outfit), sans-serif;
+}

@@ -1,0 +1,19 @@
+Welcome to Our Agency Dashboard
+
+Page 1: Overview
+This is a demonstration of our auto-scrolling PDF viewer. Each page will be displayed for 10 seconds before moving to the next one.
+
+Page 2: Our Mission
+We strive to provide real-time insights into cultural trends, social media engagement, and upcoming events through our modern dashboard interface.
+
+Page 3: Features
+- Real-time data updates
+- Instagram feed integration
+- Cultural calendar
+- News and trends tracking
+- Auto-scrolling document viewer
+
+Page 4: Contact
+For more information about our dashboard, please contact:
+email: info@example.com
+phone: (555) 123-4567 
