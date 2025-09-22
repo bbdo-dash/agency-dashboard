@@ -78,7 +78,7 @@ async function loadFeeds(): Promise<RSSFeed[]> {
       }
       return feeds;
       } catch (_error) {
-      console.error('Error loading feeds from KV storage:', error);
+      console.error('Error loading feeds from KV storage:', _error);
       return [];
     }
   }
@@ -107,7 +107,7 @@ export async function GET() {
     const feeds = await loadFeeds();
     return NextResponse.json({ feeds });
       } catch (_error) {
-    console.error('Error loading RSS feeds:', error);
+    console.error('Error loading RSS feeds:', _error);
     return NextResponse.json(
       { error: 'Failed to load RSS feeds' },
       { status: 500 }
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ feed: newFeed }, { status: 201 });
       } catch (_error) {
-    console.error('Error creating RSS feed:', error);
+    console.error('Error creating RSS feed:', _error);
     return NextResponse.json(
       { error: 'Failed to create RSS feed' },
       { status: 500 }
