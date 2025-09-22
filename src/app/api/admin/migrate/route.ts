@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { migrateAllDataToKV } from '@/lib/migration';
 
 // POST - Migrate all data to KV Storage

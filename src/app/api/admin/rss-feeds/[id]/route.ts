@@ -74,11 +74,12 @@ async function saveFeeds(feeds: RSSFeed[]): Promise<void> {
 // GET /api/admin/rss-feeds/[id] - Get specific RSS feed
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const feeds = await loadFeeds();
-    const feed = feeds.find(f => f.id === params.id);
+    const feed = feeds.find(f => f.id === id);
 
     if (!feed) {
       return NextResponse.json(
@@ -133,7 +134,8 @@ export async function PUT(
     }
 
     // Check if URL already exists (excluding current feed)
-    const existingFeed = feeds.find(feed => feed.url === url && feed.id !== params.id);
+    const { id } = await params;
+    const existingFeed = feeds.find(feed => feed.url === url && feed.id !== id);
     if (existingFeed) {
       return NextResponse.json(
         { error: 'RSS feed with this URL already exists' },
@@ -165,12 +167,13 @@ export async function PUT(
 // PATCH /api/admin/rss-feeds/[id] - Partially update RSS feed (e.g., toggle active status)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const updates = await request.json();
     const feeds = await loadFeeds();
-    const feedIndex = feeds.findIndex(f => f.id === params.id);
+    const feedIndex = feeds.findIndex(f => f.id === id);
 
     if (feedIndex === -1) {
       return NextResponse.json(
@@ -201,11 +204,12 @@ export async function PATCH(
 // DELETE /api/admin/rss-feeds/[id] - Delete RSS feed
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const feeds = await loadFeeds();
-    const feedIndex = feeds.findIndex(f => f.id === params.id);
+    const feedIndex = feeds.findIndex(f => f.id === id);
 
     if (feedIndex === -1) {
       return NextResponse.json(
