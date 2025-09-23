@@ -68,7 +68,7 @@ export default function AdminSettingsModal() {
 
       if (response.ok) {
         const result = await response.json();
-        alert(`Events erfolgreich aktualisiert! ${result.eventCount} Events wurden geladen.`);
+        alert(`Events successfully updated! ${result.eventCount} events were loaded.`);
         setSelectedFile(null);
         
         // Force refresh the dashboard data
@@ -87,8 +87,8 @@ export default function AdminSettingsModal() {
       }
     } catch (error) {
       console.error('Error uploading file:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
-      alert(`Fehler beim Hochladen der Datei: ${errorMessage}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Error uploading file: ${errorMessage}`);
     } finally {
       setIsUploading(false);
     }
@@ -115,7 +115,7 @@ export default function AdminSettingsModal() {
       }
     } catch (error) {
       console.error('Error analyzing RSS feed:', error);
-      alert('Fehler bei der RSS-Feed Analyse. Bitte überprüfen Sie die URL.');
+      alert('Error analyzing RSS feed. Please check the URL.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -127,8 +127,8 @@ export default function AdminSettingsModal() {
       <button
         onClick={() => setIsOpen(true)}
         className="flex items-center space-x-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all relative z-[9998]"
-        aria-label="Einstellungen öffnen"
-        title="Admin Einstellungen"
+        aria-label="Open settings"
+        title="Admin Settings"
       >
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
@@ -146,7 +146,7 @@ export default function AdminSettingsModal() {
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
         </svg>
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Einstellungen
+          Settings
         </span>
       </button>
 
@@ -160,7 +160,7 @@ export default function AdminSettingsModal() {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                Admin Einstellungen
+                Admin Settings
               </h2>
               <button
                 onClick={() => setIsOpen(false)}
@@ -182,7 +182,7 @@ export default function AdminSettingsModal() {
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
-                Erscheinungsbild
+                Appearance
               </button>
               <button
                 onClick={() => setActiveTab('events')}
@@ -192,7 +192,7 @@ export default function AdminSettingsModal() {
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
-                Event Kalender
+                Event Calendar
               </button>
               <button
                 onClick={() => setActiveTab('news')}
@@ -223,17 +223,17 @@ export default function AdminSettingsModal() {
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Dark Mode Einstellungen
+                      Dark Mode Settings
                     </h3>
                     
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Dark Mode aktiviert
+                            Dark Mode enabled
                           </label>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Aktiviert oder deaktiviert den dunklen Modus
+                            Enables or disables dark mode
                           </p>
                         </div>
                         <button
@@ -259,13 +259,13 @@ export default function AdminSettingsModal() {
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Event Kalender Verwaltung
+                      Event Calendar Management
                     </h3>
                     
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          CSV-Datei hochladen
+                          Upload CSV file
                         </label>
                         <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6">
                           <input
@@ -281,7 +281,7 @@ export default function AdminSettingsModal() {
                           />
                           {selectedFile && (
                             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                              Ausgewählte Datei: {selectedFile.name}
+                              Selected file: {selectedFile.name}
                             </p>
                           )}
                         </div>
@@ -293,7 +293,7 @@ export default function AdminSettingsModal() {
                           disabled={!selectedFile || isUploading}
                           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                         >
-                          {isUploading ? 'Wird hochgeladen...' : 'Events aktualisieren'}
+                          {isUploading ? 'Uploading...' : 'Update Events'}
                         </button>
                         
                         <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
@@ -301,10 +301,10 @@ export default function AdminSettingsModal() {
                             onClick={() => setShowEventEditor(true)}
                             className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                           >
-                            📝 Events manuell bearbeiten
+                            📝 Edit Events Manually
                           </button>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
-                            Events einzeln hinzufügen, bearbeiten oder löschen
+                            Add, edit or delete events individually
                           </p>
                         </div>
                       </div>
@@ -318,7 +318,7 @@ export default function AdminSettingsModal() {
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      RSS Feed Verwaltung
+                      RSS Feed Management
                     </h3>
                     
                     <div className="space-y-4">
@@ -340,30 +340,30 @@ export default function AdminSettingsModal() {
                         disabled={!rssUrl.trim() || isAnalyzing}
                         className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                       >
-                        {isAnalyzing ? 'Wird analysiert...' : 'RSS Feed analysieren'}
+                        {isAnalyzing ? 'Analyzing...' : 'Analyze RSS Feed'}
                       </button>
 
                       {analysisResult && (
                         <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                           <h4 className="font-medium text-gray-900 dark:text-white mb-3">
-                            📊 RSS-Feed Analyseergebnis
+                            📊 RSS Feed Analysis Result
                           </h4>
                           
                           {/* Feed Info */}
                           <div className="mb-4 p-3 bg-white dark:bg-gray-800 rounded border">
-                            <h5 className="font-semibold text-gray-900 dark:text-white mb-2">Feed-Informationen</h5>
+                            <h5 className="font-semibold text-gray-900 dark:text-white mb-2">Feed Information</h5>
                             <div className="space-y-1 text-sm">
-                              <p><strong>Titel:</strong> {analysisResult.feedInfo.title}</p>
-                              <p><strong>Beschreibung:</strong> {analysisResult.feedInfo.description}</p>
-                              <p><strong>Artikel-Anzahl:</strong> {analysisResult.feedInfo.itemCount}</p>
-                              <p><strong>Sprache:</strong> {analysisResult.feedInfo.language}</p>
-                              <p><strong>Letztes Update:</strong> {analysisResult.feedInfo.lastBuildDate}</p>
+                              <p><strong>Title:</strong> {analysisResult.feedInfo.title}</p>
+                              <p><strong>Description:</strong> {analysisResult.feedInfo.description}</p>
+                              <p><strong>Article Count:</strong> {analysisResult.feedInfo.itemCount}</p>
+                              <p><strong>Language:</strong> {analysisResult.feedInfo.language}</p>
+                              <p><strong>Last Update:</strong> {analysisResult.feedInfo.lastBuildDate}</p>
                             </div>
                           </div>
                           
                           {/* Recommendations */}
                           <div className="p-3 bg-white dark:bg-gray-800 rounded border">
-                            <h5 className="font-semibold text-gray-900 dark:text-white mb-2">Bewertung & Empfehlungen</h5>
+                            <h5 className="font-semibold text-gray-900 dark:text-white mb-2">Evaluation & Recommendations</h5>
                             <div className="space-y-2 text-sm">
                               {analysisResult.recommendations.map((rec: string, index: number) => (
                                 <div 
@@ -392,10 +392,10 @@ export default function AdminSettingsModal() {
                           onClick={() => setShowRSSManager(true)}
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                         >
-                          📝 RSS-Feeds verwalten
+                          📝 Manage RSS Feeds
                         </button>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
-                          RSS-Feeds hinzufügen, bearbeiten oder entfernen
+                          Add, edit or remove RSS feeds
                         </p>
                       </div>
                     </div>
@@ -408,51 +408,51 @@ export default function AdminSettingsModal() {
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Slideshow Verwaltung
+                      Slideshow Management
                     </h3>
                     
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
                           <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-                            📁 Ordner hochladen
+                            📁 Upload Folder
                           </h4>
                           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                            Ersetzt alle aktuellen Slideshow-Bilder
+                            Replaces all current slideshow images
                           </p>
                           <button
                             onClick={() => setShowSlideshowManager(true)}
                             className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                           >
-                            Ordner hochladen
+                            Upload Folder
                           </button>
                         </div>
 
                         <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
                           <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-                            🖼️ Slideshow verwalten
+                            🖼️ Manage Slideshow
                           </h4>
                           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                            Reihenfolge ändern, Bilder löschen, neue hinzufügen
+                            Change order, delete images, add new ones
                           </p>
                           <button
                             onClick={() => setShowSlideshowManager(true)}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                           >
-                            Slideshow bearbeiten
+                            Edit Slideshow
                           </button>
                         </div>
                       </div>
 
                       <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                         <h5 className="font-medium text-blue-900 dark:text-blue-200 mb-2">
-                          💡 Unterstützte Formate
+                          💡 Supported Formats
                         </h5>
                         <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
-                          <li>• PNG-Dateien (.png)</li>
-                          <li>• JPEG-Dateien (.jpg, .jpeg)</li>
-                          <li>• Einzelne Dateien oder ganze Ordner</li>
-                          <li>• Drag & Drop zum Ändern der Reihenfolge</li>
+                          <li>• PNG files (.png)</li>
+                          <li>• JPEG files (.jpg, .jpeg)</li>
+                          <li>• Individual files or entire folders</li>
+                          <li>• Drag & Drop to change order</li>
                         </ul>
                       </div>
                     </div>

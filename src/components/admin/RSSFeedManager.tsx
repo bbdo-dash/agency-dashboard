@@ -72,7 +72,7 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
 
   const handleSaveFeed = async () => {
     if (!formData.url.trim() || !formData.title.trim()) {
-      alert('Bitte füllen Sie alle Pflichtfelder aus.');
+      alert('Please fill in all required fields.');
       return;
     }
 
@@ -80,7 +80,7 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
     try {
       new URL(formData.url);
     } catch {
-      alert('Bitte geben Sie eine gültige URL ein (z.B. https://example.com/feed.xml)');
+      alert('Please enter a valid URL (e.g. https://example.com/feed.xml)');
       return;
     }
 
@@ -102,21 +102,21 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
         setShowAddForm(false);
         setEditingFeed(null);
         setFormData({ url: '', title: '', description: '' });
-        alert(editingFeed ? 'RSS-Feed wurde erfolgreich aktualisiert!' : 'RSS-Feed wurde erfolgreich hinzugefügt!');
+        alert(editingFeed ? 'RSS feed successfully updated!' : 'RSS feed successfully added!');
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Speichern');
+        throw new Error(errorData.error || 'Error saving');
       }
     } catch (error) {
       console.error('Error saving RSS feed:', error);
-      alert(`Fehler beim Speichern: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+      alert(`Error saving: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteFeed = async (feedId: string, feedTitle: string) => {
-    if (!confirm(`Sind Sie sicher, dass Sie den RSS-Feed "${feedTitle}" löschen möchten?\n\nDiese Aktion kann nicht rückgängig gemacht werden.`)) {
+    if (!confirm(`Are you sure you want to delete the RSS feed "${feedTitle}"?\n\nThis action cannot be undone.`)) {
       return;
     }
 
@@ -127,14 +127,14 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
 
       if (response.ok) {
         await loadFeeds();
-        alert(`RSS-Feed "${feedTitle}" wurde erfolgreich gelöscht.`);
+        alert(`RSS feed "${feedTitle}" successfully deleted.`);
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Löschen');
+        throw new Error(errorData.error || 'Error deleting');
       }
     } catch (error) {
       console.error('Error deleting RSS feed:', error);
-      alert(`Fehler beim Löschen: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+      alert(`Error deleting: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -152,11 +152,11 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
         await loadFeeds();
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Aktualisieren');
+        throw new Error(errorData.error || 'Error updating');
       }
     } catch (error) {
       console.error('Error toggling RSS feed status:', error);
-      alert(`Fehler beim Aktualisieren: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+      alert(`Error updating: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -170,15 +170,15 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
       });
 
       if (response.ok) {
-        alert('RSS-Feeds wurden erfolgreich aktualisiert! Die Artikel wurden neu geladen und durchmischt.');
+        alert('RSS feeds successfully updated! Articles were reloaded and shuffled.');
         // Optionally reload the page to show updated articles
         window.location.reload();
       } else {
-        throw new Error('Fehler beim Aktualisieren der RSS-Feeds');
+        throw new Error('Error updating RSS feeds');
       }
     } catch (error) {
       console.error('Error refreshing RSS feeds:', error);
-      alert(`Fehler beim Aktualisieren: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+      alert(`Error updating: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -189,7 +189,7 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Lade RSS-Feeds...</p>
+          <p className="text-gray-600 dark:text-gray-400">Loading RSS feeds...</p>
         </div>
       </div>
     );
@@ -200,7 +200,7 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          RSS-Feed Verwaltung
+          RSS Feed Management
         </h2>
         <button
           onClick={onClose}
@@ -218,19 +218,19 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
           onClick={handleRefreshFeeds}
           disabled={isLoading}
           className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-          title="Lädt alle RSS-Feeds neu und mischt die Artikel durch"
+          title="Reloads all RSS feeds and shuffles articles"
         >
           {isLoading ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              Aktualisiere...
+              Updating...
             </>
           ) : (
             <>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              RSS-Feeds aktualisieren
+              Update RSS Feeds
             </>
           )}
         </button>
@@ -238,12 +238,12 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
         <button
           onClick={handleAddFeed}
           className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-          title="Fügt einen neuen RSS-Feed zur Sammlung hinzu"
+          title="Adds a new RSS feed to the collection"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
           </svg>
-          Neuen RSS-Feed hinzufügen
+          Add New RSS Feed
         </button>
       </div>
 
@@ -251,8 +251,8 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
       <div className="space-y-4">
         {feeds.length === 0 ? (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <p>Keine RSS-Feeds konfiguriert.</p>
-            <p className="text-sm">Klicken Sie auf "Neuen RSS-Feed hinzufügen" um zu beginnen.</p>
+            <p>No RSS feeds configured.</p>
+            <p className="text-sm">Click "Add New RSS Feed" to get started.</p>
           </div>
         ) : (
           feeds.map((feed) => (
@@ -277,7 +277,7 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
                           : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                       }`}
                     >
-                      {feed.isActive ? 'Aktiv' : 'Inaktiv'}
+                      {feed.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
                   
@@ -293,10 +293,10 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
                   
                   <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                     {feed.itemCount && (
-                      <span>{feed.itemCount} Artikel</span>
+                      <span>{feed.itemCount} articles</span>
                     )}
                     {feed.lastChecked && (
-                      <span>Zuletzt geprüft: {new Date(feed.lastChecked).toLocaleDateString('de-DE')}</span>
+                      <span>Last checked: {new Date(feed.lastChecked).toLocaleDateString('en-US')}</span>
                     )}
                   </div>
                 </div>
@@ -305,7 +305,7 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
                   <button
                     onClick={() => handleEditFeed(feed)}
                     className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-200"
-                    title="Bearbeiten"
+                    title="Edit"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -319,7 +319,7 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
                         ? 'text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-200'
                         : 'text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200'
                     }`}
-                    title={feed.isActive ? 'Deaktivieren' : 'Aktivieren'}
+                    title={feed.isActive ? 'Deactivate' : 'Activate'}
                   >
                     {feed.isActive ? (
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -335,7 +335,7 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
                   <button
                     onClick={() => handleDeleteFeed(feed.id, feed.title)}
                     className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-                    title="Löschen"
+                    title="Delete"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -353,13 +353,13 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10002]">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              {editingFeed ? 'RSS-Feed bearbeiten' : 'Neuen RSS-Feed hinzufügen'}
+              {editingFeed ? 'Edit RSS Feed' : 'Add New RSS Feed'}
             </h3>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  RSS-Feed URL *
+                  RSS Feed URL *
                 </label>
                 <input
                   type="url"
@@ -372,25 +372,25 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Titel *
+                  Title *
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="z.B. HORIZONT News"
+                  placeholder="e.g. HORIZONT News"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Beschreibung (optional)
+                  Description (optional)
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Kurze Beschreibung des RSS-Feeds"
+                  placeholder="Short description of the RSS feed"
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 />
@@ -406,14 +406,14 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
                 }}
                 className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               >
-                Abbrechen
+                Cancel
               </button>
               <button
                 onClick={handleSaveFeed}
                 disabled={isSaving || !formData.url.trim() || !formData.title.trim()}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
               >
-                {isSaving ? 'Speichern...' : (editingFeed ? 'Aktualisieren' : 'Hinzufügen')}
+                {isSaving ? 'Saving...' : (editingFeed ? 'Update' : 'Add')}
               </button>
             </div>
           </div>

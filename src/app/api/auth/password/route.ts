@@ -10,11 +10,11 @@ export async function POST(request: NextRequest) {
   try {
     const { password } = await request.json();
     if (typeof password !== 'string') {
-      return NextResponse.json({ error: 'Passwort fehlt' }, { status: 400 });
+      return NextResponse.json({ error: 'Password missing' }, { status: 400 });
     }
 
     if (password !== PASSWORD) {
-      return NextResponse.json({ error: 'Ungültiges Passwort' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 
     const response = NextResponse.json({ success: true });
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     });
     return response;
   } catch (error) {
-    return NextResponse.json({ error: 'Fehlerhafte Anfrage' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }
 

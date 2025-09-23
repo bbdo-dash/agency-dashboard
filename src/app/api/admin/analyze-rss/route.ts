@@ -272,59 +272,59 @@ export async function POST(request: NextRequest) {
     const imagePercentage = Math.round((articlesWithImages / items.length) * 100);
     
     if (imagePercentage >= 80) {
-      analysis.recommendations.push('✅ **Bilder vorhanden** - ' + imagePercentage + '% der Artikel haben Bilder, perfekt für das Dashboard');
+      analysis.recommendations.push('✅ **Images available** - ' + imagePercentage + '% of articles have images, perfect for the dashboard');
       overallScore += 3;
     } else if (imagePercentage >= 50) {
-      analysis.recommendations.push('⚠️ **Wenige Bilder** - Nur ' + imagePercentage + '% der Artikel haben Bilder, Dashboard wird teilweise leer sein');
+      analysis.recommendations.push('⚠️ **Few images** - Only ' + imagePercentage + '% of articles have images, dashboard will be partially empty');
       overallScore += 2;
     } else if (imagePercentage >= 20) {
-      analysis.recommendations.push('⚠️ **Sehr wenige Bilder** - Nur ' + imagePercentage + '% der Artikel haben Bilder, viele Artikel werden nicht angezeigt');
+      analysis.recommendations.push('⚠️ **Very few images** - Only ' + imagePercentage + '% of articles have images, many articles will not be displayed');
       overallScore += 1;
     } else {
-      analysis.recommendations.push('❌ **Keine Bilder** - Nur ' + imagePercentage + '% der Artikel haben Bilder. Artikel werden nicht im Dashboard angezeigt!');
+      analysis.recommendations.push('❌ **No images** - Only ' + imagePercentage + '% of articles have images. Articles will not be displayed in the dashboard!');
     }
     maxScore += 3;
     
     // Check article count
     if (analysis.feedInfo.itemCount >= 20) {
-      analysis.recommendations.push('✅ **Viele Artikel** - Feed hat ' + analysis.feedInfo.itemCount + ' Artikel, ausreichend für regelmäßige Updates');
+      analysis.recommendations.push('✅ **Many articles** - Feed has ' + analysis.feedInfo.itemCount + ' articles, sufficient for regular updates');
       overallScore += 2;
     } else if (analysis.feedInfo.itemCount >= 10) {
-      analysis.recommendations.push('⚠️ **Wenige Artikel** - Feed hat nur ' + analysis.feedInfo.itemCount + ' Artikel, Updates könnten unregelmäßig sein');
+      analysis.recommendations.push('⚠️ **Few articles** - Feed has only ' + analysis.feedInfo.itemCount + ' articles, updates might be irregular');
       overallScore += 1;
     } else {
-      analysis.recommendations.push('❌ **Sehr wenige Artikel** - Feed hat nur ' + analysis.feedInfo.itemCount + ' Artikel, nicht empfehlenswert');
+      analysis.recommendations.push('❌ **Very few articles** - Feed has only ' + analysis.feedInfo.itemCount + ' articles, not recommended');
     }
     maxScore += 2;
     
     // Check language
     const language = analysis.tagAnalysis.languageAnalysis.primaryLanguage.toLowerCase();
     if (language === 'de' || language === 'de-de' || language === 'deutsch') {
-      analysis.recommendations.push('✅ **Deutsche Sprache** - Feed ist auf Deutsch, perfekt für das Dashboard');
+      analysis.recommendations.push('✅ **German language** - Feed is in German, perfect for the dashboard');
       overallScore += 2;
     } else if (language === 'en' || language === 'en-us' || language === 'en-gb' || language === 'english') {
-      analysis.recommendations.push('⚠️ **Englische Sprache** - Feed ist auf Englisch, Artikel werden nicht übersetzt');
+      analysis.recommendations.push('⚠️ **English language** - Feed is in English, articles will not be translated');
       overallScore += 1;
     } else {
-      analysis.recommendations.push('❌ **Fremdsprache** - Feed ist auf ' + analysis.tagAnalysis.languageAnalysis.primaryLanguage + ', nicht für deutsches Dashboard geeignet');
+      analysis.recommendations.push('❌ **Foreign language** - Feed is in ' + analysis.tagAnalysis.languageAnalysis.primaryLanguage + ', not suitable for German dashboard');
     }
     maxScore += 2;
     
     // Check categories
     if (analysis.tagAnalysis.contentStructure.hasCategories) {
-      analysis.recommendations.push('✅ **Kategorien vorhanden** - Feed hat Kategorien, gut für zukünftige Filterung');
+      analysis.recommendations.push('✅ **Categories available** - Feed has categories, good for future filtering');
       overallScore += 1;
     } else {
-      analysis.recommendations.push('ℹ️ **Keine Kategorien** - Feed hat keine Kategorien, aber das ist nicht kritisch');
+      analysis.recommendations.push('ℹ️ **No categories** - Feed has no categories, but this is not critical');
     }
     maxScore += 1;
     
     // Check content quality
     if (analysis.tagAnalysis.contentStructure.averageTitleLength >= 30) {
-      analysis.recommendations.push('✅ **Gute Titel** - Artikel haben aussagekräftige Titel (Ø ' + analysis.tagAnalysis.contentStructure.averageTitleLength + ' Zeichen)');
+      analysis.recommendations.push('✅ **Good titles** - Articles have meaningful titles (Ø ' + analysis.tagAnalysis.contentStructure.averageTitleLength + ' characters)');
       overallScore += 1;
     } else {
-      analysis.recommendations.push('⚠️ **Kurze Titel** - Artikel haben sehr kurze Titel (Ø ' + analysis.tagAnalysis.contentStructure.averageTitleLength + ' Zeichen)');
+      analysis.recommendations.push('⚠️ **Short titles** - Articles have very short titles (Ø ' + analysis.tagAnalysis.contentStructure.averageTitleLength + ' characters)');
     }
     maxScore += 1;
     
@@ -333,25 +333,25 @@ export async function POST(request: NextRequest) {
     let recommendation = '';
     
     if (scorePercentage >= 80) {
-      recommendation = '🟢 **SEHR EMPFEHLENSWERT** - Dieser RSS-Feed ist perfekt für das Dashboard geeignet!';
+      recommendation = '🟢 **HIGHLY RECOMMENDED** - This RSS feed is perfect for the dashboard!';
     } else if (scorePercentage >= 60) {
-      recommendation = '🟡 **EMPFOHLEN** - Dieser RSS-Feed ist gut geeignet, mit kleinen Einschränkungen.';
+      recommendation = '🟡 **RECOMMENDED** - This RSS feed is well suited, with minor limitations.';
     } else if (scorePercentage >= 40) {
-      recommendation = '🟠 **BEDINGT EMPFEHLENSWERT** - Dieser RSS-Feed ist nur bedingt geeignet.';
+      recommendation = '🟠 **CONDITIONALLY RECOMMENDED** - This RSS feed is only conditionally suitable.';
     } else {
-      recommendation = '🔴 **NICHT EMPFEHLENSWERT** - Dieser RSS-Feed ist nicht für das Dashboard geeignet.';
+      recommendation = '🔴 **NOT RECOMMENDED** - This RSS feed is not suitable for the dashboard.';
     }
     
     // Add summary at the end
     let summary = '';
     if (scorePercentage >= 80) {
-      summary = '💡 **Zusammenfassung:** Dieser RSS-Feed kann sofort zum Dashboard hinzugefügt werden!';
+      summary = '💡 **Summary:** This RSS feed can be added to the dashboard immediately!';
     } else if (scorePercentage >= 60) {
-      summary = '💡 **Zusammenfassung:** Dieser RSS-Feed ist gut geeignet, aber beachten Sie die Hinweise oben.';
+      summary = '💡 **Summary:** This RSS feed is well suited, but please note the comments above.';
     } else if (scorePercentage >= 40) {
-      summary = '💡 **Zusammenfassung:** Dieser RSS-Feed ist nur bedingt empfehlenswert. Überlegen Sie, ob er wirklich benötigt wird.';
+      summary = '💡 **Summary:** This RSS feed is only conditionally recommended. Consider whether it is really needed.';
     } else {
-      summary = '💡 **Zusammenfassung:** Dieser RSS-Feed ist nicht für das Dashboard geeignet. Suchen Sie nach einem besseren Feed.';
+      summary = '💡 **Summary:** This RSS feed is not suitable for the dashboard. Look for a better feed.';
     }
     
     analysis.recommendations.push('---');

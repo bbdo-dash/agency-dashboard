@@ -25,11 +25,11 @@ function PassForm() {
         router.replace(to);
         router.refresh();
       } else {
-        const data = await res.json().catch(() => ({ error: 'Fehlerhafte Eingabe' }));
-        setError(data.error || 'Ungültiges Passwort');
+        const data = await res.json().catch(() => ({ error: 'Invalid input' }));
+        setError(data.error || 'Invalid password');
       }
     } catch (err) {
-      setError('Unerwarteter Fehler. Bitte erneut versuchen.');
+      setError('Unexpected error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -41,7 +41,7 @@ function PassForm() {
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="Passwort"
+        placeholder="Password"
         className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
         autoFocus
         required
@@ -52,7 +52,7 @@ function PassForm() {
         disabled={loading}
         className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 rounded-lg"
       >
-        {loading ? 'Prüfe…' : 'Freischalten'}
+        {loading ? 'Checking…' : 'Unlock'}
       </button>
     </form>
   );
@@ -62,8 +62,8 @@ export default function PasswordGatePage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Zugang erforderlich</h1>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">Bitte Passwort eingeben, um die Seite zu öffnen.</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Access Required</h1>
+        <p className="text-gray-600 dark:text-gray-300 mb-6">Please enter password to open the page.</p>
         <Suspense>
           <PassForm />
         </Suspense>

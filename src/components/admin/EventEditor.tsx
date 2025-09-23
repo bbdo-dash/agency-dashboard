@@ -105,7 +105,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
 
   const handleSave = async () => {
     if (!formData.title || !formData.startDate || !formData.endDate || !formData.location) {
-      alert('Bitte füllen Sie alle Pflichtfelder aus.');
+      alert('Please fill in all required fields.');
       return;
     }
 
@@ -140,14 +140,25 @@ export default function EventEditor({ onClose }: EventEditorProps) {
           endDate: '',
           location: ''
         });
-        alert('Event erfolgreich hinzugefügt!');
+        alert('Event successfully added!');
+        
+        // Force refresh the dashboard data to show the new event
+        try {
+          await fetch('/api/dashboard?refresh=true', { cache: 'no-store' });
+          // Trigger page reload to show updated events on dashboard
+          window.location.reload();
+        } catch (error) {
+          console.error('Error refreshing dashboard:', error);
+          // Still reload the page even if refresh fails
+          window.location.reload();
+        }
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Speichern');
+        throw new Error(errorData.error || 'Error saving');
       }
     } catch (error) {
       console.error('Error saving event:', error);
-      alert(`Fehler beim Speichern: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+      alert(`Error saving: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }
@@ -156,7 +167,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
   const handleInlineSave = async (eventId: string) => {
     const rowData = editingRowData[eventId];
     if (!rowData || !rowData.title || !rowData.startDate || !rowData.endDate || !rowData.location) {
-      alert('Bitte füllen Sie alle Pflichtfelder aus.');
+      alert('Please fill in all required fields.');
       return;
     }
 
@@ -166,7 +177,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
       console.error('Original event not found for ID:', eventId);
       console.log('Available events:', events.map(e => ({ id: e.id, title: e.title })));
       console.log('Editing row data:', rowData);
-      alert('Fehler: Event nicht gefunden. Bitte versuchen Sie es erneut.');
+      alert('Error: Event not found. Please try again.');
       // Cancel edit mode and reload events
       setEditingEventId(null);
       setEditingRowData(prev => {
@@ -223,21 +234,32 @@ export default function EventEditor({ onClose }: EventEditorProps) {
           delete newData[eventId];
           return newData;
         });
-        alert('Event erfolgreich aktualisiert!');
+        alert('Event successfully updated!');
+        
+        // Force refresh the dashboard data to show the updated event
+        try {
+          await fetch('/api/dashboard?refresh=true', { cache: 'no-store' });
+          // Trigger page reload to show updated events on dashboard
+          window.location.reload();
+        } catch (error) {
+          console.error('Error refreshing dashboard:', error);
+          // Still reload the page even if refresh fails
+          window.location.reload();
+        }
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Speichern');
+        throw new Error(errorData.error || 'Error saving');
       }
     } catch (error) {
       console.error('Error saving event:', error);
-      alert(`Fehler beim Speichern: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+      alert(`Error saving: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (eventId: string) => {
-    if (!confirm('Sind Sie sicher, dass Sie dieses Event löschen möchten?')) {
+    if (!confirm('Are you sure you want to delete this event?')) {
       return;
     }
 
@@ -249,19 +271,30 @@ export default function EventEditor({ onClose }: EventEditorProps) {
       if (response.ok) {
         // Reload and sort events
         await loadEvents();
-        alert('Event erfolgreich gelöscht!');
+        alert('Event successfully deleted!');
+        
+        // Force refresh the dashboard data to show the updated event list
+        try {
+          await fetch('/api/dashboard?refresh=true', { cache: 'no-store' });
+          // Trigger page reload to show updated events on dashboard
+          window.location.reload();
+        } catch (error) {
+          console.error('Error refreshing dashboard:', error);
+          // Still reload the page even if refresh fails
+          window.location.reload();
+        }
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Löschen');
+        throw new Error(errorData.error || 'Error deleting');
       }
     } catch (error) {
       console.error('Error deleting event:', error);
-      alert(`Fehler beim Löschen: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+      alert(`Error deleting: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('de-DE');
+    return new Date(dateString).toLocaleDateString('en-US');
   };
 
   if (loading) {
@@ -277,7 +310,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Events bearbeiten
+          Edit Events
         </h3>
         <div className="flex space-x-3">
           <button
@@ -287,7 +320,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Neues Event
+            New Event
           </button>
           <button
             onClick={onClose}
@@ -296,7 +329,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
-            Schließen
+            Close
           </button>
         </div>
       </div>
@@ -305,7 +338,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
       {showAddForm && (
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
           <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">
-            Neues Event hinzufügen
+            Add New Event
           </h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -324,20 +357,20 @@ export default function EventEditor({ onClose }: EventEditorProps) {
             
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Ort *
+                Location *
               </label>
               <input
                 type="text"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
-                placeholder="Ort"
+                placeholder="Location"
               />
             </div>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Startdatum *
+                Start Date *
               </label>
               <input
                 type="date"
@@ -349,7 +382,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
             
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Enddatum *
+                End Date *
               </label>
               <input
                 type="date"
@@ -361,14 +394,14 @@ export default function EventEditor({ onClose }: EventEditorProps) {
             
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Beschreibung
+                Description
               </label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
-                placeholder="Event Beschreibung (optional)"
+                placeholder="Event description (optional)"
               />
             </div>
           </div>
@@ -391,7 +424,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
-              Abbrechen
+              Cancel
             </button>
             <button
               onClick={handleSave}
@@ -404,14 +437,14 @@ export default function EventEditor({ onClose }: EventEditorProps) {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Speichern...
+                  Saving...
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  Hinzufügen
+                  Add
                 </>
               )}
             </button>
@@ -429,19 +462,19 @@ export default function EventEditor({ onClose }: EventEditorProps) {
                   Name
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Startdatum
+                  Start Date
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Enddatum
+                  End Date
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Ort
+                  Location
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Beschreibung
+                  Description
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Aktionen
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -449,7 +482,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
               {events.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-4 text-center text-gray-500 dark:text-gray-400">
-                    Keine Events gefunden
+                    No events found
                   </td>
                 </tr>
               ) : (
@@ -516,7 +549,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
                             value={rowData?.location || ''}
                             onChange={(e) => updateInlineField(event.id, 'location', e.target.value)}
                             className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                            placeholder="Ort"
+                            placeholder="Location"
                           />
                         ) : (
                           <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -533,7 +566,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
                             value={rowData?.description || ''}
                             onChange={(e) => updateInlineField(event.id, 'description', e.target.value)}
                             className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                            placeholder="Beschreibung"
+                            placeholder="Description"
                           />
                         ) : (
                           <div className="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">
@@ -550,22 +583,22 @@ export default function EventEditor({ onClose }: EventEditorProps) {
                               onClick={() => handleInlineSave(event.id)}
                               disabled={saving}
                               className="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-xs font-medium rounded-md transition-colors"
-                              title="Speichern"
+                              title="Save"
                             >
                               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                               </svg>
-                              Speichern
+                              Save
                             </button>
                             <button
                               onClick={() => cancelInlineEdit(event.id)}
                               className="inline-flex items-center px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-xs font-medium rounded-md transition-colors"
-                              title="Abbrechen"
+                              title="Cancel"
                             >
                               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                               </svg>
-                              Abbrechen
+                              Cancel
                             </button>
                           </div>
                         ) : (
@@ -573,22 +606,22 @@ export default function EventEditor({ onClose }: EventEditorProps) {
                             <button
                               onClick={() => startInlineEdit(event)}
                               className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md transition-colors"
-                              title="Bearbeiten"
+                              title="Edit"
                             >
                               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
-                              Bearbeiten
+                              Edit
                             </button>
                             <button
                               onClick={() => handleDelete(event.id)}
                               className="inline-flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-md transition-colors"
-                              title="Löschen"
+                              title="Delete"
                             >
                               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
-                              Löschen
+                              Delete
                             </button>
                           </div>
                         )}

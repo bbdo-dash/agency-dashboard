@@ -71,11 +71,11 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
         window.dispatchEvent(new StorageEvent('storage', { key: 'slideshowUpdated' }));
       } else {
         const error = await response.json();
-        alert(`Fehler beim Hochladen: ${error.error}`);
+        alert(`Error uploading: ${error.error}`);
       }
     } catch (error) {
       console.error('Error uploading files:', error);
-      alert('Fehler beim Hochladen der Dateien');
+      alert('Error uploading files');
     } finally {
       setUploading(false);
     }
@@ -108,7 +108,7 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
   };
 
   const handleDeleteImage = async (filename: string) => {
-    if (!confirm('Möchten Sie dieses Bild wirklich löschen?')) return;
+    if (!confirm('Do you really want to delete this image?')) return;
 
     try {
       const response = await fetch(`/api/admin/slideshow?filename=${encodeURIComponent(filename)}`, {
@@ -122,11 +122,11 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
         window.dispatchEvent(new StorageEvent('storage', { key: 'slideshowUpdated' }));
       } else {
         const error = await response.json();
-        alert(`Fehler beim Löschen: ${error.error}`);
+        alert(`Error deleting: ${error.error}`);
       }
     } catch (error) {
       console.error('Error deleting image:', error);
-      alert('Fehler beim Löschen des Bildes');
+      alert('Error deleting image');
     }
   };
 
@@ -178,7 +178,7 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
       if (!response.ok) {
         // Revert on error
         await loadImages();
-        alert('Fehler beim Speichern der neuen Reihenfolge');
+        alert('Error saving new order');
       } else {
         // Signal to ImageViewer to refresh
         localStorage.setItem('slideshowUpdated', 'true');
@@ -187,7 +187,7 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
     } catch (error) {
       console.error('Error reordering images:', error);
       await loadImages(); // Revert on error
-      alert('Fehler beim Speichern der neuen Reihenfolge');
+      alert('Error saving new order');
     } finally {
       setReordering(false);
     }
@@ -196,7 +196,7 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600 dark:text-gray-400">Lade Bilder...</div>
+        <div className="text-gray-600 dark:text-gray-400">Loading images...</div>
       </div>
     );
   }
@@ -205,7 +205,7 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
     <div className="space-y-6 max-h-full overflow-y-auto">
       <div className="flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 pb-4 border-b border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Slideshow Verwaltung
+          Slideshow Management
         </h3>
         <button
           onClick={onClose}
@@ -222,10 +222,10 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
             <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-              📁 Ordner hochladen (ersetzt alle)
+              📁 Upload Folder (replaces all)
             </h4>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Alle aktuellen Bilder werden durch die neuen ersetzt
+              All current images will be replaced by new ones
             </p>
             <input
               ref={folderInputRef}
@@ -241,16 +241,16 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
               disabled={uploading}
               className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
             >
-              {uploading ? 'Wird hochgeladen...' : 'Ordner hochladen'}
+              {uploading ? 'Uploading...' : 'Upload Folder'}
             </button>
           </div>
 
           <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
             <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-              🖼️ Bilder hinzufügen
+              🖼️ Add Images
             </h4>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Neue Bilder zur bestehenden Slideshow hinzufügen
+              Add new images to existing slideshow
             </p>
             <input
               ref={fileInputRef}
@@ -265,7 +265,7 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
               disabled={uploading}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
             >
-              {uploading ? 'Wird hochgeladen...' : 'Bilder hinzufügen'}
+              {uploading ? 'Uploading...' : 'Add Images'}
             </button>
           </div>
         </div>
@@ -275,18 +275,18 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h4 className="font-medium text-gray-900 dark:text-white">
-            Aktuelle Slideshow ({images.length} Bilder)
+            Current Slideshow ({images.length} images)
           </h4>
           {reordering && (
             <div className="text-sm text-blue-600 dark:text-blue-400">
-              Reihenfolge wird gespeichert...
+              Saving order...
             </div>
           )}
         </div>
 
         {images.length === 0 ? (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            Keine Bilder in der Slideshow
+            No images in slideshow
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 max-h-96 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -319,7 +319,7 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
                     <button
                       onClick={() => handleDeleteImage(image.name)}
                       className="bg-red-600 hover:bg-red-700 text-white p-1 rounded"
-                      title="Bild löschen"
+                      title="Delete image"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -336,14 +336,14 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
       {/* Instructions */}
       <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg sticky bottom-0">
         <h5 className="font-medium text-blue-900 dark:text-blue-200 mb-2">
-          💡 Anleitung
+          💡 Instructions
         </h5>
         <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
-          <li>• <strong>Drag & Drop:</strong> Ziehen Sie Bilder, um die Reihenfolge zu ändern</li>
-          <li>• <strong>Löschen:</strong> Klicken Sie auf das rote X-Symbol zum Löschen</li>
-          <li>• <strong>Ordner hochladen:</strong> Ersetzt alle bestehenden Bilder</li>
-          <li>• <strong>Bilder hinzufügen:</strong> Fügt neue Bilder zur bestehenden Slideshow hinzu</li>
-          <li>• <strong>Scrollen:</strong> Scrollen Sie in der Bildergalerie, um alle Slides zu sehen</li>
+          <li>• <strong>Drag & Drop:</strong> Drag images to change order</li>
+          <li>• <strong>Delete:</strong> Click the red X symbol to delete</li>
+          <li>• <strong>Upload Folder:</strong> Replaces all existing images</li>
+          <li>• <strong>Add Images:</strong> Adds new images to existing slideshow</li>
+          <li>• <strong>Scroll:</strong> Scroll in the image gallery to see all slides</li>
         </ul>
       </div>
     </div>
