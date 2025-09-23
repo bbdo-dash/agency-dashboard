@@ -3,6 +3,8 @@ import type { NewsItem } from '@/types/dashboard';
 import { XMLParser } from 'fast-xml-parser';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { kv } from '@vercel/kv';
+import { ensureRSSFeedsInKV } from '@/lib/migration';
 
 // Default HORIZONT RSS feed URL (Agenturen) - fallback
 const HORIZONT_RSS = 'https://www.horizont.net/news/feed/';
@@ -21,24 +23,47 @@ interface RSSFeed {
 
 const FEEDS_FILE = path.join(process.cwd(), 'data', 'rss-feeds.json');
 
-// Load configured RSS feeds
+// Load configured RSS feeds (KV in production, JSON file in development)
 async function loadConfiguredFeeds(): Promise<RSSFeed[]> {
-  try {
-    const data = await fs.readFile(FEEDS_FILE, 'utf-8');
-    const feeds = JSON.parse(data);
-    return feeds.filter((feed: RSSFeed) => feed.isActive);
-  } catch (_error) {
-    // Return default feed if no configuration exists
-    return [{
-      id: 'horizont-news',
-      url: HORIZONT_RSS,
-      title: 'HORIZONT News',
-      description: 'Aktuelle Nachrichten aus der Werbebranche',
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }];
+  const isDev = process.env.NODE_ENV === 'development';
+
+  if (isDev) {
+    try {
+      const data = await fs.readFile(FEEDS_FILE, 'utf-8');
+      const feeds = JSON.parse(data) as RSSFeed[];
+      return feeds.filter((feed: RSSFeed) => feed.isActive);
+    } catch (_error) {
+      return [{
+        id: 'horizont-news',
+        url: HORIZONT_RSS,
+        title: 'HORIZONT News',
+        description: 'Aktuelle Nachrichten aus der Werbebranche',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }];
+    }
   }
+
+  // Production: use Vercel KV
+  try {
+    await ensureRSSFeedsInKV();
+    const feeds = (await kv.get<RSSFeed[]>('rss_feeds')) || [];
+    const active = feeds.filter(feed => feed.isActive);
+    if (active.length > 0) return active;
+  } catch (_error) {
+    // fall through to default
+  }
+
+  return [{
+    id: 'horizont-news',
+    url: HORIZONT_RSS,
+    title: 'HORIZONT News',
+    description: 'Aktuelle Nachrichten aus der Werbebranche',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }];
 }
 
 // Mix articles from different feeds randomly while maintaining some chronological order
@@ -328,12 +353,18 @@ export async function GET(request: NextRequest) {
     console.log(`📰 Returning ${finalArticles.length} mixed articles from ${configuredFeeds.length} feeds:`, sourceCounts);
     
     const response = NextResponse.json({ articles: finalArticles });
-    
-    // Disable caching to ensure fresh results
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    response.headers.set('Pragma', 'no-cache');
-    response.headers.set('Expires', '0');
-    response.headers.set('Surrogate-Control', 'no-store');
+
+    // Cache policy: 5 hours by default, bypass if refresh=true
+    const FIVE_HOURS_SECONDS = 60 * 60 * 5; // 18000
+    if (refresh) {
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+      response.headers.set('Surrogate-Control', 'no-store');
+    } else {
+      // Public caching at the edge with stale-while-revalidate for resilience
+      response.headers.set('Cache-Control', `public, s-maxage=${FIVE_HOURS_SECONDS}, stale-while-revalidate=${FIVE_HOURS_SECONDS}`);
+    }
     
     return response;
   } catch (error) {

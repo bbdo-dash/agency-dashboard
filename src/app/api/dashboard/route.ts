@@ -101,22 +101,18 @@ async function getFallbackNewsData() {
 }
 
 // Get news data using our internal API (now backed by HORIZONT RSS)
-async function getNewsData() {
+async function getNewsData(refresh: boolean) {
   try {
     // Construct URL based on environment
     const baseUrl = process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}` 
       : (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000');
       
-    console.log(`Fetching news from: ${baseUrl}/api/news`);
+    const newsUrl = `${baseUrl}/api/news${refresh ? '?refresh=true' : ''}`;
+    console.log(`Fetching news from: ${newsUrl}`);
     
     // Use our internal API which now serves HORIZONT RSS items
-    const response = await fetch(
-      `${baseUrl}/api/news`,
-      { 
-        next: { revalidate: 300 } // Cache for 5 minutes
-      }
-    );
+    const response = await fetch(newsUrl, { next: { revalidate: 60 * 60 * 5 } }); // 5 hours
     
     if (!response.ok) {
       console.error(`News endpoint responded with status: ${response.status}`);
@@ -222,7 +218,7 @@ export async function GET(request: NextRequest) {
     const forceRefresh = searchParams.get('refresh') === 'true';
     
     // Get news data from our internal API
-    const news = await getNewsData();
+    const news = await getNewsData(forceRefresh);
     console.log(`Dashboard API - news data fetched, ${news?.length || 0} items`);
     
     // Get Instagram posts from RSS feed
@@ -256,9 +252,12 @@ export async function GET(request: NextRequest) {
     
     console.log(`Dashboard API - responding with ${response.news.length} news items, ${instagramFeeds.length} Instagram feeds, and ${events.length} events`);
     
+    const FIVE_HOURS_SECONDS = 60 * 60 * 5;
     return NextResponse.json(response, {
       headers: {
-        'Cache-Control': forceRefresh ? 'no-cache, no-store, must-revalidate' : 'public, max-age=300'
+        'Cache-Control': forceRefresh
+          ? 'no-cache, no-store, must-revalidate'
+          : `public, s-maxage=${FIVE_HOURS_SECONDS}, stale-while-revalidate=${FIVE_HOURS_SECONDS}`
       }
     });
   } catch (error) {
