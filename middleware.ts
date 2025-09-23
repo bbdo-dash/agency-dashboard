@@ -12,6 +12,8 @@ export function middleware(request: NextRequest) {
   const isPublicPath =
     pathname.startsWith('/pass') ||
     pathname.startsWith('/api/auth/password') ||
+    pathname.startsWith('/api/news') ||
+    pathname.startsWith('/api/dashboard') ||
     pathname.startsWith('/api/health') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/static') ||
