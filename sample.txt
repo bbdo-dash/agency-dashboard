@@ -17,3 +17,5 @@ Page 4: Contact
 For more information about our dashboard, please contact:
 email: info@example.com
 phone: (555) 123-4567 
+
+npx @agentdeskai/browser-tools-server@1.2.0

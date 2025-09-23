@@ -37,6 +37,7 @@ KV_REST_API_READ_ONLY_TOKEN=your_kv_readonly_token_here
 - Navigate to Storage → KV
 - Create a new KV store
 - Copy the `KV_REST_API_URL`, `KV_REST_API_TOKEN`, and `KV_REST_API_READ_ONLY_TOKEN`
+- Database name: bbdo-dashboard-data
 
 ### 3. Deploy to Vercel
 - Connect your GitHub repository to Vercel
