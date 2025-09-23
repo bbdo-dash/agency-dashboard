@@ -96,174 +96,170 @@ export class AdminIntegration {
   /**
    * RSS Feed operations
    */
-  rssFeeds = {
-    async create(url: string, title: string, description?: string): Promise<AdminOperationResult> {
-      return await this.executeOperation(
-        async () => {
-          const response = await fetch('/api/admin/rss-feeds', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url, title, description })
-          });
+  async createRssFeed(url: string, title: string, description?: string): Promise<AdminOperationResult> {
+    return await this.executeOperation(
+      async () => {
+        const response = await fetch('/api/admin/rss-feeds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, title, description })
+        });
 
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to create RSS feed');
-          }
-
-          return await response.json();
-        },
-        { successMessage: 'RSS feed created and dashboard updated' }
-      );
-    },
-
-    async update(id: string, updates: { url?: string; title?: string; description?: string }): Promise<AdminOperationResult> {
-      return await this.executeOperation(
-        async () => {
-          const response = await fetch(`/api/admin/rss-feeds/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updates)
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to update RSS feed');
-          }
-
-          return await response.json();
-        },
-        { successMessage: 'RSS feed updated and dashboard refreshed' }
-      );
-    },
-
-    async toggleStatus(id: string, isActive: boolean): Promise<AdminOperationResult> {
-      return await this.executeOperation(
-        async () => {
-          const response = await fetch(`/api/admin/rss-feeds/${id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ isActive })
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to update RSS feed status');
-          }
-
-          return await response.json();
-        },
-        { 
-          successMessage: `RSS feed ${isActive ? 'activated' : 'deactivated'} and dashboard updated`,
-          updateStrategy: UpdateStrategy.OPTIMISTIC
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to create RSS feed');
         }
-      );
-    },
 
-    async delete(id: string): Promise<AdminOperationResult> {
-      return await this.executeOperation(
-        async () => {
-          const response = await fetch(`/api/admin/rss-feeds/${id}`, {
-            method: 'DELETE'
-          });
+        return await response.json();
+      },
+      { successMessage: 'RSS feed created and dashboard updated' }
+    );
+  }
 
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to delete RSS feed');
-          }
+  async updateRssFeed(id: string, updates: { url?: string; title?: string; description?: string }): Promise<AdminOperationResult> {
+    return await this.executeOperation(
+      async () => {
+        const response = await fetch(`/api/admin/rss-feeds/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        });
 
-          return await response.json();
-        },
-        { successMessage: 'RSS feed deleted and dashboard updated' }
-      );
-    }
-  };
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update RSS feed');
+        }
+
+        return await response.json();
+      },
+      { successMessage: 'RSS feed updated and dashboard refreshed' }
+    );
+  }
+
+  async toggleRssFeedStatus(id: string, isActive: boolean): Promise<AdminOperationResult> {
+    return await this.executeOperation(
+      async () => {
+        const response = await fetch(`/api/admin/rss-feeds/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isActive })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update RSS feed status');
+        }
+
+        return await response.json();
+      },
+      { 
+        successMessage: `RSS feed ${isActive ? 'activated' : 'deactivated'} and dashboard updated`,
+        updateStrategy: UpdateStrategy.OPTIMISTIC
+      }
+    );
+  }
+
+  async deleteRssFeed(id: string): Promise<AdminOperationResult> {
+    return await this.executeOperation(
+      async () => {
+        const response = await fetch(`/api/admin/rss-feeds/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to delete RSS feed');
+        }
+
+        return await response.json();
+      },
+      { successMessage: 'RSS feed deleted and dashboard updated' }
+    );
+  }
 
   /**
    * Social RSS Feed operations
    */
-  socialRssFeeds = {
-    async create(url: string, title: string, description?: string): Promise<AdminOperationResult> {
-      return await this.executeOperation(
-        async () => {
-          const response = await fetch('/api/admin/social-rss-feeds', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url, title, description })
-          });
+  async createSocialRssFeed(url: string, title: string, description?: string): Promise<AdminOperationResult> {
+    return await this.executeOperation(
+      async () => {
+        const response = await fetch('/api/admin/social-rss-feeds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, title, description })
+        });
 
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to create social RSS feed');
-          }
-
-          return await response.json();
-        },
-        { successMessage: 'Social RSS feed created and dashboard updated' }
-      );
-    },
-
-    async update(id: string, updates: { url?: string; title?: string; description?: string }): Promise<AdminOperationResult> {
-      return await this.executeOperation(
-        async () => {
-          const response = await fetch(`/api/admin/social-rss-feeds/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updates)
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to update social RSS feed');
-          }
-
-          return await response.json();
-        },
-        { successMessage: 'Social RSS feed updated and dashboard refreshed' }
-      );
-    },
-
-    async toggleStatus(id: string, isActive: boolean): Promise<AdminOperationResult> {
-      return await this.executeOperation(
-        async () => {
-          const response = await fetch(`/api/admin/social-rss-feeds/${id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ isActive })
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to update social RSS feed status');
-          }
-
-          return await response.json();
-        },
-        { 
-          successMessage: `Social RSS feed ${isActive ? 'activated' : 'deactivated'} and dashboard updated`,
-          updateStrategy: UpdateStrategy.OPTIMISTIC
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to create social RSS feed');
         }
-      );
-    },
 
-    async delete(id: string): Promise<AdminOperationResult> {
-      return await this.executeOperation(
-        async () => {
-          const response = await fetch(`/api/admin/social-rss-feeds/${id}`, {
-            method: 'DELETE'
-          });
+        return await response.json();
+      },
+      { successMessage: 'Social RSS feed created and dashboard updated' }
+    );
+  }
 
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to delete social RSS feed');
-          }
+  async updateSocialRssFeed(id: string, updates: { url?: string; title?: string; description?: string }): Promise<AdminOperationResult> {
+    return await this.executeOperation(
+      async () => {
+        const response = await fetch(`/api/admin/social-rss-feeds/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        });
 
-          return await response.json();
-        },
-        { successMessage: 'Social RSS feed deleted and dashboard updated' }
-      );
-    }
-  };
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update social RSS feed');
+        }
+
+        return await response.json();
+      },
+      { successMessage: 'Social RSS feed updated and dashboard refreshed' }
+    );
+  }
+
+  async toggleSocialRssFeedStatus(id: string, isActive: boolean): Promise<AdminOperationResult> {
+    return await this.executeOperation(
+      async () => {
+        const response = await fetch(`/api/admin/social-rss-feeds/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isActive })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update social RSS feed status');
+        }
+
+        return await response.json();
+      },
+      { 
+        successMessage: `Social RSS feed ${isActive ? 'activated' : 'deactivated'} and dashboard updated`,
+        updateStrategy: UpdateStrategy.OPTIMISTIC
+      }
+    );
+  }
+
+  async deleteSocialRssFeed(id: string): Promise<AdminOperationResult> {
+    return await this.executeOperation(
+      async () => {
+        const response = await fetch(`/api/admin/social-rss-feeds/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to delete social RSS feed');
+        }
+
+        return await response.json();
+      },
+      { successMessage: 'Social RSS feed deleted and dashboard updated' }
+    );
+  }
 
   /**
    * Manual dashboard refresh
