@@ -754,20 +754,25 @@ export default function Home() {
                               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 350px"
                               className="object-cover"
                               priority={index === 0}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/images/breaking-news-fallback.svg';
+                              }}
+                              unoptimized={post.imageUrl.startsWith('data:')}
                             />
                           </div>
                           
                           {/* Caption and metadata below image */}
                           <div 
-                            className="p-2 pt-2 pb-1 bg-white flex flex-col justify-between" 
+                            className="p-2 pt-2 pb-1.5 bg-white flex flex-col justify-between min-h-[60px]" 
                             style={{ height: '40%' }}
                           >
-                            <p className="text-xs sm:text-sm md:text-sm text-gray-900 line-clamp-3 mb-1">
-                              {post.caption.length > 65 ? `${post.caption.substring(0, 65)}...` : post.caption}
+                            <p className="text-xs sm:text-sm md:text-sm lg:text-xs xl:text-sm text-gray-900 line-clamp-2 lg:line-clamp-2 xl:line-clamp-3 mb-1">
+                              {post.caption.length > 55 ? `${post.caption.substring(0, 55)}...` : post.caption}
                             </p>
                             
-                            <div className="flex items-center">
-                              <span className="text-xs text-gray-500">
+                            <div className="flex items-center mt-auto">
+                              <span className="text-xs lg:text-xs xl:text-sm text-gray-500 font-medium">
                                 {new Date(post.timestamp).toLocaleDateString('en-US', {
                                   month: 'short',
                                   day: 'numeric'

@@ -7,5 +7,14 @@
     "isActive": true,
     "createdAt": "2025-09-23T13:19:49.018Z",
     "updatedAt": "2025-09-23T13:19:49.018Z"
+  },
+  {
+    "id": "social-rss-1758636032847-clcqpoqgk",
+    "url": "https://rss.app/feeds/vri1UrnJeNuEJx4b.xml",
+    "title": "BBDO LinkedIn",
+    "description": "",
+    "isActive": true,
+    "createdAt": "2025-09-23T14:00:32.847Z",
+    "updatedAt": "2025-09-23T14:00:32.847Z"
   }
 ]

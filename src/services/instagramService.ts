@@ -39,8 +39,8 @@ async function loadSocialFeeds(): Promise<SocialRSSFeedConfig[]> {
   }
 }
 
-// Default image for when we can't extract one from the RSS feed
-const DEFAULT_PORSCHE_IMAGE = 'https://scontent.cdninstagram.com/v/t51.2885-19/325385406_1600607227079024_7537725051693415601_n.jpg?stp=dst-jpg_s240x240_tt6&_nc_ht=scontent.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2QHPoUmEtaM0AFozeiTKa4Y_ZzP-KP_6ZjhTVzeniMFrbQKrriHDzItjcYJCtVNiuUs&_nc_ohc=HcaB-npmDZ0Q7kNvgFFTOy8';
+// Default fallback image for when we can't extract one from the RSS feed
+const DEFAULT_FALLBACK_IMAGE = '/images/breaking-news-fallback.svg';
 
 
 interface FeedData {
@@ -85,34 +85,59 @@ export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false):
         const posts = items.map((item: any, index: number) => {
           let imageUrl = '';
           
+          // Debug: Log the item structure to understand the data
+          console.log(`Processing item ${index} from ${feed.title}:`, {
+            hasMediaContent: !!item['media:content'],
+            hasEnclosure: !!item.enclosure,
+            hasContentEncoded: !!item['content:encoded'],
+            hasDescription: !!item.description
+          });
+          
           // Try to get image from various locations
+          // First check media:content (most common for Instagram)
           if (item['media:content'] && item['media:content']['@_url']) {
             imageUrl = item['media:content']['@_url'];
+            console.log(`Found media:content image: ${imageUrl}`);
           } else if (item.enclosure && item.enclosure['@_url']) {
             imageUrl = item.enclosure['@_url'];
+            console.log(`Found enclosure image: ${imageUrl}`);
           } else if (item['content:encoded']) {
             // Try to extract image from content:encoded
             const contentEncoded = item['content:encoded'];
             
             // Try different regex patterns to match image URLs
             const imgMatches = [
-              // Standard img tag
+              // Instagram specific URL patterns (prioritize these)
+              contentEncoded.match(/https:\/\/scontent[\w.-]+\.cdninstagram\.com\/[^"'\s<>]+/g),
+              // Standard img tag with src
               contentEncoded.match(/<img[^>]+src="([^">]+)"/),
+              // Standard img tag with data-src
+              contentEncoded.match(/<img[^>]+data-src="([^"]+)"/),
               // Image in background style
               contentEncoded.match(/background-image:url\(['"]?([^'"]+)['"]?\)/),
-              // Image in data-src attribute
-              contentEncoded.match(/data-src="([^"]+)"/),
-              // Instagram specific URL patterns
-              contentEncoded.match(/https:\/\/scontent[\w.-]+\.cdninstagram\.com\/[^"'\s]+/),
-              // Raw image URL
-              contentEncoded.match(/(https?:\/\/[^"'\s]+\.(?:jpg|jpeg|png|gif|webp))/i)
+              // Image in style attribute
+              contentEncoded.match(/background[^:]*:\s*url\(['"]?([^'"]+)['"]?\)/),
+              // Other CDN patterns
+              contentEncoded.match(/https:\/\/[^"'\s<>]+\.(?:s3|amazonaws|cloudfront)[^"'\s<>]+/),
+              // Generic image URLs
+              contentEncoded.match(/(https?:\/\/[^"'\s<>]+\.(?:jpg|jpeg|png|gif|webp|svg))/i),
+              // Base64 images
+              contentEncoded.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/)
             ];
             
             // Use the first successful match
             for (const match of imgMatches) {
-              if (match && match[1]) {
-                imageUrl = match[1];
-                break;
+              if (match) {
+                // Handle Instagram URL arrays (global match returns array)
+                if (Array.isArray(match) && match.length > 0) {
+                  imageUrl = match[0]; // Take the first Instagram URL found
+                  console.log(`Found Instagram URL from content: ${imageUrl}`);
+                  break;
+                } else if (match[1]) {
+                  imageUrl = match[1];
+                  console.log(`Found image URL from content: ${imageUrl}`);
+                  break;
+                }
               }
             }
           }
@@ -134,19 +159,37 @@ export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false):
             
             // Try multiple patterns for images in the description
             const descImgMatches = [
-              // Standard img tag
+              // Instagram specific URL patterns (prioritize these)
+              rawDescription.match(/https:\/\/scontent[\w.-]+\.cdninstagram\.com\/[^"'\s<>]+/g),
+              // Standard img tag with src
               rawDescription.match(/<img[^>]+src="([^">]+)"/),
+              // Standard img tag with data-src
+              rawDescription.match(/<img[^>]+data-src="([^"]+)"/),
+              // Image in background style
+              rawDescription.match(/background-image:url\(['"]?([^'"]+)['"]?\)/),
+              // Image in style attribute
+              rawDescription.match(/background[^:]*:\s*url\(['"]?([^'"]+)['"]?\)/),
+              // Other CDN patterns
+              rawDescription.match(/https:\/\/[^"'\s<>]+\.(?:s3|amazonaws|cloudfront)[^"'\s<>]+/),
               // Image URL ending with image extension
-              rawDescription.match(/(https?:\/\/[^"'\s]+\.(?:jpg|jpeg|png|gif|webp))/i),
-              // Instagram specific URL patterns
-              rawDescription.match(/https:\/\/scontent[\w.-]+\.cdninstagram\.com\/[^"'\s]+/)
+              rawDescription.match(/(https?:\/\/[^"'\s<>]+\.(?:jpg|jpeg|png|gif|webp|svg))/i),
+              // Base64 images
+              rawDescription.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/)
             ];
             
             // Use the first successful match
             for (const match of descImgMatches) {
-              if (match && match[1]) {
-                imageUrl = match[1];
-                break;
+              if (match) {
+                // Handle Instagram URL arrays (global match returns array)
+                if (Array.isArray(match) && match.length > 0) {
+                  imageUrl = match[0]; // Take the first Instagram URL found
+                  console.log(`Found Instagram URL from description: ${imageUrl}`);
+                  break;
+                } else if (match[1]) {
+                  imageUrl = match[1];
+                  console.log(`Found image URL from description: ${imageUrl}`);
+                  break;
+                }
               }
             }
           }
@@ -154,9 +197,20 @@ export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false):
           // Now remove HTML tags from description
           description = description.replace(/<[^>]*>/g, '');
           
-          // If no image was found, use the default
+          // Last resort: search for any Instagram URL in the entire item
           if (!imageUrl) {
-            imageUrl = DEFAULT_PORSCHE_IMAGE;
+            const itemString = JSON.stringify(item);
+            const instagramUrlMatch = itemString.match(/https:\/\/scontent[\w.-]+\.cdninstagram\.com\/[^"'\s<>]+/);
+            if (instagramUrlMatch) {
+              imageUrl = instagramUrlMatch[0];
+              console.log(`Found Instagram URL from item string: ${imageUrl}`);
+            }
+          }
+          
+          // If still no image was found, use the default fallback
+          if (!imageUrl) {
+            imageUrl = DEFAULT_FALLBACK_IMAGE;
+            console.log(`Using fallback image for item ${index}`);
           }
           
           // Try to extract likes count from the title or description
@@ -203,14 +257,10 @@ export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false):
           };
         });
         
-        // Filter out posts without valid images (only keep posts with real images, not defaults)
-        const postsWithImages = posts.filter((post: InstagramPost) => 
-          post.imageUrl && post.imageUrl !== DEFAULT_PORSCHE_IMAGE
-        );
-        
+        // Return all posts (including those with fallback images)
         return {
           title: feed.title,
-          posts: postsWithImages.slice(0, 10) // Limit to 10 posts per feed for better performance
+          posts: posts.slice(0, 10) // Limit to 10 posts per feed for better performance
         };
       } catch (error) {
         console.error(`Error fetching posts from ${feed.url}:`, error);
@@ -218,7 +268,7 @@ export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false):
           title: feed.title,
           posts: [{
             id: `fallback-${feed.title.toLowerCase().replace(/\s/g, '-')}`,
-            imageUrl: DEFAULT_PORSCHE_IMAGE,
+            imageUrl: DEFAULT_FALLBACK_IMAGE,
             caption: `${feed.title} - Visit our page for the latest updates`,
             likes: 0,
             comments: 0,
@@ -235,11 +285,12 @@ export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false):
     console.error('Error fetching posts from RSS feeds:', error);
     
     // Return fallback data for all feeds
-    return RSS_FEEDS.map(feed => ({
+    const configuredFeeds = await loadSocialFeeds();
+    return configuredFeeds.map((feed: SocialRSSFeedConfig) => ({
       title: feed.title,
       posts: [{
         id: `fallback-${feed.title.toLowerCase().replace(/\s/g, '-')}`,
-        imageUrl: DEFAULT_PORSCHE_IMAGE,
+        imageUrl: DEFAULT_FALLBACK_IMAGE,
         caption: `${feed.title} - Visit our page for the latest updates`,
         likes: 0,
         comments: 0,
