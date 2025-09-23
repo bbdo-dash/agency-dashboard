@@ -287,12 +287,19 @@ export async function GET(request: NextRequest) {
     
     console.log(`Dashboard API - responding with ${response.news.length} news items, ${instagramFeeds.length} Instagram feeds, and ${events.length} events`);
     
-    const FIVE_HOURS_SECONDS = 60 * 60 * 5;
+    const CACHE_DURATION = forceRefresh ? 0 : 300; // 5 minutes for normal requests, no cache for forced refresh
+    
     return NextResponse.json(response, {
       headers: {
         'Cache-Control': forceRefresh
           ? 'no-cache, no-store, must-revalidate'
-          : `public, s-maxage=${FIVE_HOURS_SECONDS}, stale-while-revalidate=${FIVE_HOURS_SECONDS}`
+          : `public, s-maxage=${CACHE_DURATION}, stale-while-revalidate=${CACHE_DURATION}`,
+        'CDN-Cache-Control': forceRefresh
+          ? 'no-cache'
+          : `public, s-maxage=${CACHE_DURATION}`,
+        'Vercel-CDN-Cache-Control': forceRefresh
+          ? 'no-cache'
+          : `public, s-maxage=${CACHE_DURATION}`
       }
     });
   } catch (error) {

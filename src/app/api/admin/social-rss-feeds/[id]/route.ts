@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { kv } from '@vercel/kv';
+import { invalidateAdminCaches } from '@/lib/cache-invalidation';
 
 function isDevelopment() {
   return process.env.NODE_ENV === 'development';
@@ -91,6 +92,10 @@ export async function PUT(
 
     feeds[feedIndex] = { ...feeds[feedIndex], url, title, description: description || '', updatedAt: new Date().toISOString() };
     await saveFeeds(feeds);
+
+    // Invalidate caches to ensure immediate updates
+    await invalidateAdminCaches();
+
     return NextResponse.json({ feed: feeds[feedIndex] });
   } catch (_error) {
     return NextResponse.json({ error: 'Failed to update social RSS feed' }, { status: 500 });
@@ -109,6 +114,10 @@ export async function PATCH(
     if (feedIndex === -1) return NextResponse.json({ error: 'RSS feed not found' }, { status: 404 });
     feeds[feedIndex] = { ...feeds[feedIndex], ...updates, updatedAt: new Date().toISOString() };
     await saveFeeds(feeds);
+
+    // Invalidate caches to ensure immediate updates
+    await invalidateAdminCaches();
+
     return NextResponse.json({ feed: feeds[feedIndex] });
   } catch (_error) {
     return NextResponse.json({ error: 'Failed to update social RSS feed' }, { status: 500 });
@@ -126,6 +135,10 @@ export async function DELETE(
     if (feedIndex === -1) return NextResponse.json({ error: 'RSS feed not found' }, { status: 404 });
     feeds.splice(feedIndex, 1);
     await saveFeeds(feeds);
+
+    // Invalidate caches to ensure immediate updates
+    await invalidateAdminCaches();
+
     return NextResponse.json({ message: 'RSS feed deleted successfully' });
   } catch (_error) {
     return NextResponse.json({ error: 'Failed to delete social RSS feed' }, { status: 500 });

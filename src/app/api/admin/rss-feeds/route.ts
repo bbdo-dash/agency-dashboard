@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { kv } from '@vercel/kv';
+import { invalidateAdminCaches } from '@/lib/cache-invalidation';
 import { ensureRSSFeedsInKV } from '@/lib/migration';
 
 // Helper function to check if we're in development mode
@@ -160,6 +161,9 @@ export async function POST(request: NextRequest) {
 
     feeds.push(newFeed);
     await saveFeeds(feeds);
+
+    // Invalidate caches to ensure immediate updates
+    await invalidateAdminCaches();
 
     return NextResponse.json({ feed: newFeed }, { status: 201 });
       } catch (_error) {

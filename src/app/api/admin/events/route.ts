@@ -4,6 +4,7 @@ import { writeFile } from 'fs/promises';
 import { CalendarEvent } from '@/types/dashboard';
 import { kv } from '@vercel/kv';
 import { ensureEventsInKV, ensureRSSFeedsInKV } from '@/lib/migration';
+import { invalidateAdminCaches } from '@/lib/cache-invalidation';
 
 // Helper function to check if we're in development mode
 function isDevelopment() {

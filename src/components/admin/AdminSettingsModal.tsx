@@ -484,10 +484,18 @@ export default function AdminSettingsModal() {
                       <button
                         onClick={async () => {
                           try {
+                            // Force refresh the dashboard data
                             await fetch('/api/dashboard?refresh=true', { cache: 'no-store' });
-                            window.location.reload();
+                            
+                            // Show success message
+                            alert('Dashboard refreshed successfully! Changes should now be visible.');
+                            
+                            // Optionally reload the page to ensure all caches are cleared
+                            if (confirm('Reload the page to see changes immediately?')) {
+                              window.location.reload();
+                            }
                           } catch (_e) {
-                            window.location.reload();
+                            alert('Failed to refresh dashboard. Please try again.');
                           }
                         }}
                         className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
