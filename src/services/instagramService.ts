@@ -42,7 +42,6 @@ async function loadSocialFeeds(): Promise<SocialRSSFeedConfig[]> {
 // Default fallback image for when we can't extract one from the RSS feed
 const DEFAULT_FALLBACK_IMAGE = '/images/breaking-news-fallback.svg';
 
-
 interface FeedData {
   title: string;
   posts: InstagramPost[];
@@ -298,4 +297,4 @@ export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false):
       }]
     }));
   }
-} 
+}
