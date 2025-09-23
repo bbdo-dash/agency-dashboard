@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fetchInstagramPostsFromRSS } from '@/services/instagramService';
 import { CalendarEvent } from '@/types/dashboard';
 import { loadEventsFromCSV, getEventsCSVPath } from '@/lib/csvParser';
+import { kv } from '@vercel/kv';
+import { ensureEventsInKV } from '@/lib/migration';
 
 // Fallback news data when the News API doesn't return results
 async function getFallbackNewsData() {
@@ -187,23 +189,59 @@ const mockData = {
   ]
 };
 
-// Process events from CSV data
-function getEventsData(): CalendarEvent[] {
+// Helper function to check if we're in development mode
+function isDevelopment() {
+  return process.env.NODE_ENV === 'development';
+}
+
+// Process events from CSV data or KV storage
+async function getEventsData(): Promise<CalendarEvent[]> {
   try {
-    // Load events from the CSV file
-    const csvPath = getEventsCSVPath();
-    const events = loadEventsFromCSV(csvPath);
-    
-    console.log(`Loaded ${events.length} events from CSV file`);
-    
-    // Return events sorted by start date
-    return events.sort((a, b) => 
-      new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-    );
+    if (isDevelopment()) {
+      // In development, load events from CSV file
+      const csvPath = getEventsCSVPath();
+      const events = loadEventsFromCSV(csvPath);
+      
+      console.log(`Loaded ${events.length} events from CSV file`);
+      
+      // Return events sorted by start date
+      return events.sort((a, b) => 
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
+    } else {
+      // In production, load events from Vercel KV Storage
+      // Ensure events are migrated if needed
+      await ensureEventsInKV();
+      
+      let events = await kv.get<CalendarEvent[]>('calendar_events') || [];
+      
+      // If no events in KV storage, try to load from CSV and migrate
+      if (events.length === 0) {
+        console.log('No events in KV storage, attempting to load from CSV and migrate...');
+        try {
+          const csvPath = getEventsCSVPath();
+          const csvEvents = loadEventsFromCSV(csvPath);
+          if (csvEvents.length > 0) {
+            await kv.set('calendar_events', csvEvents);
+            events = csvEvents;
+            console.log(`Migrated ${csvEvents.length} events from CSV to KV storage`);
+          }
+        } catch (csvError) {
+          console.error('Error loading from CSV for migration:', csvError);
+        }
+      }
+      
+      console.log(`Loaded ${events.length} events from KV storage`);
+      
+      // Return events sorted by start date
+      return events.sort((a, b) => 
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
+    }
   } catch (error) {
-    console.error('Error loading events from CSV:', error);
+    console.error('Error loading events:', error);
     
-    // Fallback to empty array if CSV loading fails
+    // Fallback to empty array if loading fails
     return [];
   }
 }
@@ -235,8 +273,8 @@ export async function GET(request: NextRequest) {
       }];
     }
     
-    // Get events data (always fresh from CSV)
-    const events = getEventsData();
+    // Get events data (from CSV in development, from KV storage in production)
+    const events = await getEventsData();
     console.log(`Dashboard API - events loaded: ${events.length} events`);
     
     // Return all data as JSON, ensuring a consistent structure

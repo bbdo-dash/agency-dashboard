@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
+import { kv } from '@vercel/kv';
+import { ensureEventsInKV } from '@/lib/migration';
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,18 +56,31 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Test parse the CSV to ensure it's valid
+    // Test parse the CSV to ensure it's valid and update KV storage in production
+    let parsedEvents = [];
     try {
       const { parseCSVToEvents } = await import('@/lib/csvParser');
-      const testEvents = parseCSVToEvents(csvContent);
+      parsedEvents = parseCSVToEvents(csvContent);
       
-      if (testEvents.length === 0) {
+      if (parsedEvents.length === 0) {
         return NextResponse.json({ 
           error: 'No valid events found in CSV file. Please check date format and data structure.' 
         }, { status: 400 });
       }
       
-      console.log(`CSV validation successful: ${testEvents.length} events parsed`);
+      console.log(`CSV validation successful: ${parsedEvents.length} events parsed`);
+      
+      // In production, also update KV storage
+      if (process.env.NODE_ENV === 'production') {
+        try {
+          await ensureEventsInKV();
+          await kv.set('calendar_events', parsedEvents);
+          console.log(`Updated KV storage with ${parsedEvents.length} events`);
+        } catch (kvError) {
+          console.error('Error updating KV storage:', kvError);
+          // Don't fail the upload if KV update fails, just log the error
+        }
+      }
     } catch (parseError) {
       console.error('CSV parsing error:', parseError);
       return NextResponse.json({ 
