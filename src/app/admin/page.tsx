@@ -1,3 +1,5 @@
+'use client';
+
 // Import the main dashboard component
 import MainDashboard from '../page';
 
