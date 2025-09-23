@@ -14,9 +14,10 @@ interface SocialRSSFeed {
 
 interface SocialRSSFeedManagerProps {
   onClose: () => void;
+  initialFeed?: SocialRSSFeed | null;
 }
 
-export default function SocialRSSFeedManager({ onClose }: SocialRSSFeedManagerProps) {
+export default function SocialRSSFeedManager({ onClose, initialFeed = null }: SocialRSSFeedManagerProps) {
   const [feeds, setFeeds] = useState<SocialRSSFeed[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -44,6 +45,15 @@ export default function SocialRSSFeedManager({ onClose }: SocialRSSFeedManagerPr
   }, []);
 
   useEffect(() => { loadFeeds(); }, [loadFeeds]);
+
+  // Open directly in edit mode if initialFeed provided
+  useEffect(() => {
+    if (initialFeed) {
+      setFormData({ url: initialFeed.url, title: initialFeed.title, description: initialFeed.description || '' });
+      setEditingFeed(initialFeed);
+      setShowAddForm(true);
+    }
+  }, [initialFeed]);
 
   const handleAddFeed = () => {
     setFormData({ url: '', title: '', description: '' });

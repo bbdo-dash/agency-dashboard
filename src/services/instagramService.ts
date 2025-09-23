@@ -51,13 +51,13 @@ interface FeedData {
 /**
  * Fetches Instagram posts from the RSS feed
  */
-export async function fetchInstagramPostsFromRSS(): Promise<FeedData[]> {
+export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false): Promise<FeedData[]> {
   try {
     const configuredFeeds = await loadSocialFeeds();
     const feedsPromises = configuredFeeds.map(async (feed) => {
       try {
-        const response = await fetch(feed.url, { 
-          next: { revalidate: 3600 } // Cache for 1 hour
+        const response = await fetch(forceRefresh ? `${feed.url}${feed.url.includes('?') ? '&' : '?'}t=${Date.now()}` : feed.url, {
+          ...(forceRefresh ? { cache: 'no-store' } : { next: { revalidate: 3600 } })
         });
         
         if (!response.ok) {

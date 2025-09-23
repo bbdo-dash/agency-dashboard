@@ -259,7 +259,7 @@ export async function GET(request: NextRequest) {
     // Get Instagram posts from RSS feed
     let instagramFeeds;
     try {
-      instagramFeeds = await fetchInstagramPostsFromRSS();
+      instagramFeeds = await fetchInstagramPostsFromRSS(forceRefresh);
       // Select a random feed to display (will be rotated on the client side)
       const randomFeedIndex = Math.floor(Math.random() * instagramFeeds.length);
       const selectedFeed = instagramFeeds[randomFeedIndex];

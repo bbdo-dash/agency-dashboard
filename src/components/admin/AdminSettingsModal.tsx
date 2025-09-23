@@ -13,6 +13,7 @@ export default function AdminSettingsModal() {
   const [showRSSManager, setShowRSSManager] = useState(false);
   const [showSlideshowManager, setShowSlideshowManager] = useState(false);
   const [showSocialRSSManager, setShowSocialRSSManager] = useState(false);
+  const [socialManagerInitialFeed, setSocialManagerInitialFeed] = useState<{ id: string; url: string; title: string; description?: string; isActive: boolean } | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Dark mode settings
@@ -460,7 +461,11 @@ export default function AdminSettingsModal() {
                                 <p className="font-medium text-gray-900 dark:text-white truncate">{f.title}</p>
                                 <p className="text-gray-600 dark:text-gray-400 break-all">{f.url}</p>
                               </div>
-                              <span className={`shrink-0 ml-2 mt-0.5 text-xs ${f.isActive ? 'text-green-600' : 'text-gray-500'}`}>{f.isActive ? 'Active' : 'Inactive'}</span>
+                              <div className="flex items-center gap-2">
+                                <span className={`shrink-0 text-xs ${f.isActive ? 'text-green-600' : 'text-gray-500'}`}>{f.isActive ? 'Active' : 'Inactive'}</span>
+                                <button onClick={() => { setSocialManagerInitialFeed(f as any); setShowSocialRSSManager(true); }} className="px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white">Edit</button>
+                                <button onClick={async () => { if (!confirm(`Delete feed \"${f.title}\"?`)) return; const res = await fetch(`/api/admin/social-rss-feeds/${f.id}`, { method: 'DELETE' }); if (res.ok) { try { const r = await fetch('/api/admin/social-rss-feeds', { cache: 'no-store' }); const d = await r.json(); setSocialFeeds(Array.isArray(d.feeds) ? d.feeds : []); } catch (_) {} } else { const err = await res.json().catch(() => ({} as any)); alert(err?.error || 'Delete failed'); } }} className="px-2 py-1 rounded bg-red-600 hover:bg-red-700 text-white">Delete</button>
+                              </div>
                             </div>
                           ))}
                           {socialFeeds.length === 0 && (
@@ -469,15 +474,28 @@ export default function AdminSettingsModal() {
                         </div>
                       )}
                     </div>
-                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4 space-y-2">
                       <button
                         onClick={() => setShowSocialRSSManager(true)}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                       >
                         📝 Manage Social RSS Feeds
                       </button>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await fetch('/api/dashboard?refresh=true', { cache: 'no-store' });
+                            window.location.reload();
+                          } catch (_e) {
+                            window.location.reload();
+                          }
+                        }}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                      >
+                        🔄 Refresh Social Feeds on Dashboard
+                      </button>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
-                        Add, edit or remove social RSS feeds for Instagram
+                        Updates the dashboard to fetch posts from the latest Social RSS feeds
                       </p>
                     </div>
                   </div>
