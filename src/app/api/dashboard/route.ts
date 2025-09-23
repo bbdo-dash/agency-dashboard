@@ -101,14 +101,11 @@ async function getFallbackNewsData() {
 }
 
 // Get news data using our internal API (now backed by HORIZONT RSS)
-async function getNewsData(refresh: boolean) {
+async function getNewsData(request: NextRequest, refresh: boolean) {
   try {
-    // Construct URL based on environment
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000');
-      
-    const newsUrl = `${baseUrl}/api/news${refresh ? '?refresh=true' : ''}`;
+    // Construct URL based on the incoming request origin
+    const origin = request.nextUrl.origin;
+    const newsUrl = `${origin}/api/news${refresh ? '?refresh=true' : ''}`;
     console.log(`Fetching news from: ${newsUrl}`);
     
     // Use our internal API which now serves HORIZONT RSS items
@@ -218,7 +215,7 @@ export async function GET(request: NextRequest) {
     const forceRefresh = searchParams.get('refresh') === 'true';
     
     // Get news data from our internal API
-    const news = await getNewsData(forceRefresh);
+    const news = await getNewsData(request, forceRefresh);
     console.log(`Dashboard API - news data fetched, ${news?.length || 0} items`);
     
     // Get Instagram posts from RSS feed
