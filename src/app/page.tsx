@@ -517,12 +517,10 @@ export default function Home() {
             </h1>
           </div>
           
-          {/* Admin Settings Button - only show in admin mode */}
-          {isAdminMode && (
-            <div className="flex items-center">
-              <AdminSettingsModal />
-            </div>
-          )}
+          {/* Admin Settings Button - always show for easy access */}
+          <div className="flex items-center">
+            <AdminSettingsModal />
+          </div>
           
           <div className="bg-white py-2.5 px-4 rounded-3xl shadow-sm flex items-center space-x-1">
             <div className="text-gray-700 text-xs sm:text-sm font-medium">
