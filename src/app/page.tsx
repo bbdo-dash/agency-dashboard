@@ -6,12 +6,13 @@ import type { NewsItem, InstagramPost, CalendarEvent } from '@/types/dashboard';
 import ImageViewer from '@/components/ImageViewer';
 import BackgroundAnimation from '@/components/BackgroundAnimation';
 import AdminSettingsModal from '@/components/admin/AdminSettingsModal';
+import QRCodeComponent from '@/components/QRCode';
 import React from 'react';
 
 // Helper component: dynamically clamp description based on title line count
 function NewsCard({ item, idx, isNewsAnimating }: { item: NewsItem; idx: number; isNewsAnimating: boolean }) {
   const titleRef = useRef<HTMLHeadingElement | null>(null);
-  const [descClamp, setDescClamp] = useState<2 | 3>(3);
+  const [descClamp, setDescClamp] = useState<2 | 3>(2);
 
   useEffect(() => {
     const el = titleRef.current;
@@ -19,6 +20,7 @@ function NewsCard({ item, idx, isNewsAnimating }: { item: NewsItem; idx: number;
     const style = window.getComputedStyle(el);
     const lineHeight = parseFloat(style.lineHeight || '0');
     const lines = lineHeight > 0 ? Math.round(el.clientHeight / lineHeight) : 1;
+    // Always allow at least 2 lines for description, use 3 only if title is single line
     setDescClamp(lines >= 2 ? 2 : 3);
   }, [item.title]);
 
@@ -51,16 +53,33 @@ function NewsCard({ item, idx, isNewsAnimating }: { item: NewsItem; idx: number;
             }
           }}
         />
+        
+        {/* QR Code positioned at bottom left of the image */}
+        <div 
+          className="absolute bottom-1 left-1 z-10 cursor-pointer group"
+          title="Scan QR code to open article"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(item.url, '_blank', 'noopener,noreferrer');
+          }}
+        >
+          <QRCodeComponent 
+            url={item.url} 
+            size={40}
+            className="shadow-lg rounded transition-transform duration-200 group-hover:scale-110"
+          />
+        </div>
       </div>
       
       {/* Content on the right */}
-      <div className="px-4 py-3 pb-4 flex-grow flex flex-col min-w-0 min-h-0 h-full">
+      <div className="px-3 py-2 pb-2 flex-grow flex flex-col min-w-0 min-h-0 h-full">
         <div className="flex items-center mb-0.5">
-          <span className="font-semibold text-sm text-gray-800 truncate">
+          <span className="font-semibold text-xs text-gray-800 truncate">
             {item.source}
           </span>
-          <span className="text-gray-400 mx-2">•</span>
-          <time className="text-gray-500 text-sm">
+          <span className="text-gray-400 mx-1.5 text-xs">•</span>
+          <time className="text-gray-500 text-xs">
             {item.formattedDate || new Date(item.publishedAt).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric'
@@ -68,11 +87,11 @@ function NewsCard({ item, idx, isNewsAnimating }: { item: NewsItem; idx: number;
           </time>
         </div>
         
-        <h3 ref={titleRef} className="text-base font-semibold text-gray-900 mb-1 break-words">
+        <h3 ref={titleRef} className="text-sm font-semibold text-gray-900 mb-1 break-words leading-tight line-clamp-2">
           {item.title}
         </h3>
         
-        <p className={`text-sm text-gray-600 leading-snug ${descClamp === 2 ? 'line-clamp-2' : 'line-clamp-3'}`}>
+        <p className={`text-xs text-gray-600 leading-tight ${descClamp === 2 ? 'line-clamp-2' : 'line-clamp-3'}`}>
           {item.content}
         </p>
         
@@ -778,17 +797,17 @@ export default function Home() {
               </div>
               
               {/* Content */}
-              <div className="relative h-full w-full z-10 flex flex-col p-5 pt-5 pb-5">
-                <div className="flex items-start mb-4">
+              <div className="relative h-full w-full z-10 flex flex-col p-4 pt-4 pb-4">
+                <div className="flex items-start mb-2">
                   <h2 className="font-bold text-xl md:text-2xl lg:text-[1.6rem] xl:text-[1.8rem] 2xl:text-[2.1rem] uppercase text-gray-900 dark:text-white leading-tight">
                     News
                   </h2>
                 </div>
                 
-                <div className="relative z-10 flex-1 flex flex-col mt-3 overflow-hidden min-h-0">
+                <div className="relative z-10 flex-1 flex flex-col mt-1 overflow-hidden min-h-0">
                   {/* Always show exactly 2 news items filling the container height equally */}
                   {data.news && data.news.length > 0 ? (
-                    <div className="grid grid-rows-2 gap-3 h-full">
+                    <div className="grid grid-rows-2 gap-2 h-full">
                       {data.news
                         .map(item => ({
                           ...item,

@@ -4,13 +4,15 @@ import { useState, useRef, useEffect } from "react";
 import EventEditor from "./EventEditor";
 import RSSFeedManager from "./RSSFeedManager";
 import SlideshowManager from "./SlideshowManager";
+import SocialRSSFeedManager from "./SocialRSSFeedManager";
 
 export default function AdminSettingsModal() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'appearance' | 'events' | 'news' | 'slideshow'>('appearance');
+  const [activeTab, setActiveTab] = useState<'appearance' | 'events' | 'news' | 'social' | 'slideshow'>('appearance');
   const [showEventEditor, setShowEventEditor] = useState(false);
   const [showRSSManager, setShowRSSManager] = useState(false);
   const [showSlideshowManager, setShowSlideshowManager] = useState(false);
+  const [showSocialRSSManager, setShowSocialRSSManager] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Dark mode settings
@@ -24,6 +26,10 @@ export default function AdminSettingsModal() {
   const [rssUrl, setRssUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+
+  // Social RSS overview
+  const [socialFeeds, setSocialFeeds] = useState<Array<{ id: string; url: string; title: string; isActive: boolean }>>([]);
+  const [isLoadingSocial, setIsLoadingSocial] = useState(false);
 
   // Load settings on mount
   useEffect(() => {
@@ -51,6 +57,27 @@ export default function AdminSettingsModal() {
       document.documentElement.classList.remove("dark");
     }
   };
+
+  // Load social feeds when Social tab is opened
+  useEffect(() => {
+    const loadSocial = async () => {
+      try {
+        setIsLoadingSocial(true);
+        const res = await fetch('/api/admin/social-rss-feeds', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          setSocialFeeds(Array.isArray(data.feeds) ? data.feeds : []);
+        } else {
+          setSocialFeeds([]);
+        }
+      } catch (e) {
+        setSocialFeeds([]);
+      } finally {
+        setIsLoadingSocial(false);
+      }
+    };
+    if (isOpen && activeTab === 'social') loadSocial();
+  }, [isOpen, activeTab]);
 
 
   const handleFileUpload = async () => {
@@ -203,6 +230,16 @@ export default function AdminSettingsModal() {
                 }`}
               >
                 RSS Feeds
+              </button>
+              <button
+                onClick={() => setActiveTab('social')}
+                className={`px-6 py-3 text-sm font-medium ${
+                  activeTab === 'social'
+                    ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                Social Feeds
               </button>
               <button
                 onClick={() => setActiveTab('slideshow')}
@@ -403,6 +440,51 @@ export default function AdminSettingsModal() {
                 </div>
               )}
 
+            {/* Social Tab */}
+            {activeTab === 'social' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Social Media RSS Management
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <h4 className="font-medium text-gray-900 dark:text-white mb-2">Configured Social Feeds</h4>
+                      {isLoadingSocial ? (
+                        <p className="text-sm text-gray-600 dark:text-gray-300">Loading…</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {socialFeeds.map((f) => (
+                            <div key={f.id} className="flex items-start justify-between text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-3 py-2">
+                              <div className="min-w-0 pr-3">
+                                <p className="font-medium text-gray-900 dark:text-white truncate">{f.title}</p>
+                                <p className="text-gray-600 dark:text-gray-400 break-all">{f.url}</p>
+                              </div>
+                              <span className={`shrink-0 ml-2 mt-0.5 text-xs ${f.isActive ? 'text-green-600' : 'text-gray-500'}`}>{f.isActive ? 'Active' : 'Inactive'}</span>
+                            </div>
+                          ))}
+                          {socialFeeds.length === 0 && (
+                            <p className="text-sm text-gray-600 dark:text-gray-300">No social feeds configured yet.</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                      <button
+                        onClick={() => setShowSocialRSSManager(true)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                      >
+                        📝 Manage Social RSS Feeds
+                      </button>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
+                        Add, edit or remove social RSS feeds for Instagram
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
               {/* Slideshow Tab */}
               {activeTab === 'slideshow' && (
                 <div className="space-y-6">
@@ -492,6 +574,17 @@ export default function AdminSettingsModal() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-7xl mx-4 max-h-[95vh] overflow-hidden flex flex-col">
             <div className="p-6 overflow-y-auto flex-1">
               <SlideshowManager onClose={() => setShowSlideshowManager(false)} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Social RSS Manager Modal */}
+      {showSocialRSSManager && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10002]">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl mx-4 max-h-[95vh] overflow-hidden">
+            <div className="p-6">
+              <SocialRSSFeedManager onClose={() => setShowSocialRSSManager(false)} />
             </div>
           </div>
         </div>

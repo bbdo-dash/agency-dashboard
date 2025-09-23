@@ -1,0 +1,29 @@
+[
+  {
+    "id": "porsche-instagram",
+    "url": "https://rss.app/feeds/izVEz8ICc3RriXvF.xml",
+    "title": "Porsche Motorsport",
+    "description": "",
+    "isActive": true,
+    "createdAt": "2025-09-23T13:19:49.018Z",
+    "updatedAt": "2025-09-23T13:19:49.018Z"
+  },
+  {
+    "id": "bbdo-instagram",
+    "url": "https://rss.app/feeds/zwbRbUNOsbxIJHGj.xml",
+    "title": "BBDO Instagram",
+    "description": "",
+    "isActive": true,
+    "createdAt": "2025-09-23T13:19:49.018Z",
+    "updatedAt": "2025-09-23T13:19:49.018Z"
+  },
+  {
+    "id": "social-rss-1758633589018-cp9scyf6j",
+    "url": "https://rss.app/feeds/NkyjXjPIRJ3FO37c.xml",
+    "title": "Insta BBDO 2",
+    "description": "",
+    "isActive": true,
+    "createdAt": "2025-09-23T13:19:49.018Z",
+    "updatedAt": "2025-09-23T13:19:49.018Z"
+  }
+]

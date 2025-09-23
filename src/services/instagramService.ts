@@ -1,17 +1,43 @@
 import { XMLParser } from 'fast-xml-parser';
 import { InstagramPost } from '@/types/dashboard';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { kv } from '@vercel/kv';
 
-// Configure different feed sources with their titles
-const RSS_FEEDS = [
-  {
-    url: 'https://rss.app/feeds/izVEz8ICc3RriXvF.xml',
-    title: 'Porsche Motorsport'
-  },
-  {
-    url: 'https://rss.app/feeds/zwbRbUNOsbxIJHGj.xml',
-    title: 'BBDO Instagram'
+interface SocialRSSFeedConfig {
+  id: string;
+  url: string;
+  title: string;
+  description?: string;
+  isActive: boolean;
+}
+
+const SOCIAL_FEEDS_FILE = path.join(process.cwd(), 'data', 'social-rss-feeds.json');
+
+async function loadSocialFeeds(): Promise<SocialRSSFeedConfig[]> {
+  const isDev = process.env.NODE_ENV === 'development';
+  if (isDev) {
+    try {
+      const data = await fs.readFile(SOCIAL_FEEDS_FILE, 'utf-8');
+      return (JSON.parse(data) as SocialRSSFeedConfig[]).filter(f => f.isActive);
+    } catch (_error) {
+      return [
+        { id: 'porsche-instagram', url: 'https://rss.app/feeds/izVEz8ICc3RriXvF.xml', title: 'Porsche Motorsport', isActive: true },
+        { id: 'bbdo-instagram', url: 'https://rss.app/feeds/zwbRbUNOsbxIJHGj.xml', title: 'BBDO Instagram', isActive: true }
+      ];
+    }
   }
-];
+  try {
+    const feeds = (await kv.get<SocialRSSFeedConfig[]>('social_rss_feeds')) || [];
+    const active = feeds.filter(f => f.isActive);
+    return active.length > 0 ? active : [
+      { id: 'porsche-instagram', url: 'https://rss.app/feeds/izVEz8ICc3RriXvF.xml', title: 'Porsche Motorsport', isActive: true },
+      { id: 'bbdo-instagram', url: 'https://rss.app/feeds/zwbRbUNOsbxIJHGj.xml', title: 'BBDO Instagram', isActive: true }
+    ];
+  } catch (_error) {
+    return [];
+  }
+}
 
 // Default image for when we can't extract one from the RSS feed
 const DEFAULT_PORSCHE_IMAGE = 'https://scontent.cdninstagram.com/v/t51.2885-19/325385406_1600607227079024_7537725051693415601_n.jpg?stp=dst-jpg_s240x240_tt6&_nc_ht=scontent.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2QHPoUmEtaM0AFozeiTKa4Y_ZzP-KP_6ZjhTVzeniMFrbQKrriHDzItjcYJCtVNiuUs&_nc_ohc=HcaB-npmDZ0Q7kNvgFFTOy8';
@@ -27,10 +53,8 @@ interface FeedData {
  */
 export async function fetchInstagramPostsFromRSS(): Promise<FeedData[]> {
   try {
-    console.log('Fetching posts from multiple RSS feeds...');
-    
-    // Fetch from all configured feeds
-    const feedsPromises = RSS_FEEDS.map(async (feed) => {
+    const configuredFeeds = await loadSocialFeeds();
+    const feedsPromises = configuredFeeds.map(async (feed) => {
       try {
         const response = await fetch(feed.url, { 
           next: { revalidate: 3600 } // Cache for 1 hour
