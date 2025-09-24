@@ -319,8 +319,8 @@ export async function GET(request: NextRequest) {
           console.log(`🖼️ Filtered out ${filteredCount} articles without images from ${feed.title}`);
         }
         
-        // Limit after filtering
-        const limitedMapped = mapped.slice(0, Math.ceil(pageSize / configuredFeeds.length));
+        // Always take the first 2 items WITH images from each feed
+        const limitedMapped = mapped.slice(0, 2);
         
         allArticles.push(...limitedMapped);
         console.log(`✅ Added ${limitedMapped.length} articles from ${feed.title}`);
