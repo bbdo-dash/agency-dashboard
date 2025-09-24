@@ -27,8 +27,6 @@ export default function SocialRSSFeedManager({ onClose, initialFeed = null }: So
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
 
   const [formData, setFormData] = useState({ url: '', title: '', description: '' });
-  const [postsCount, setPostsCount] = useState<number>(6);
-  const [perFeedCounts, setPerFeedCounts] = useState<Record<string, number>>({});
 
   const loadFeeds = useCallback(async () => {
     try {
@@ -40,26 +38,7 @@ export default function SocialRSSFeedManager({ onClose, initialFeed = null }: So
       } else {
         setFeeds([]);
       }
-      // Load posts-per-feed setting
-      try {
-        const s = await fetch('/api/admin/social-rss-feeds/settings', { cache: 'no-store' });
-        if (s.ok) {
-          const j = await s.json();
-          if ([3,6,9].includes(j.count)) setPostsCount(j.count);
-        }
-        // load per-feed overrides
-        const map: Record<string, number> = {};
-        for (const f of feeds) {
-          if (f.id) {
-            const r = await fetch(`/api/admin/social-rss-feeds/settings?feedId=${encodeURIComponent(f.id)}`, { cache: 'no-store' });
-            if (r.ok) {
-              const jj = await r.json();
-              if ([3,6,9].includes(jj.count)) map[f.id] = jj.count;
-            }
-          }
-        }
-        setPerFeedCounts(map);
-      } catch (_e) {}
+      // No per-feed posts settings anymore
     } catch (error) {
       console.error('Error loading social RSS feeds:', error);
       setFeeds([]);
@@ -164,32 +143,7 @@ export default function SocialRSSFeedManager({ onClose, initialFeed = null }: So
         <button onClick={handleAddFeed} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Add Feed</button>
       </div>
 
-      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded border border-gray-200 dark:border-gray-700">
-        <span className="text-sm text-gray-700 dark:text-gray-200">Posts per feed:</span>
-        <select
-          value={postsCount}
-          onChange={async (e) => {
-            const val = Number(e.target.value);
-            setPostsCount(val);
-            try {
-              const res = await fetch('/api/admin/social-rss-feeds/settings', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ count: val })
-              });
-              if (!res.ok) throw new Error('save failed');
-              setStatus({ type: 'success', message: 'Setting saved. Next refresh will use the new value.' });
-            } catch (_e) {
-              setStatus({ type: 'error', message: 'Failed to save setting.' });
-            }
-          }}
-          className="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
-        >
-          <option value={3}>3</option>
-          <option value={6}>6</option>
-          <option value={9}>9</option>
-        </select>
-      </div>
+      {/* Posts-per-feed setting removed */}
 
       {isLoading ? (
         <div className="text-center text-gray-600 dark:text-gray-300">Loading…</div>
@@ -204,30 +158,6 @@ export default function SocialRSSFeedManager({ onClose, initialFeed = null }: So
                   {feed.description ? <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{feed.description}</p> : null}
                 </div>
                 <div className="flex items-center gap-2">
-                  <select
-                    value={perFeedCounts[feed.id] ?? postsCount}
-                    onChange={async (e) => {
-                      const val = Number(e.target.value);
-                      setPerFeedCounts(prev => ({ ...prev, [feed.id]: val }));
-                      try {
-                        const res = await fetch(`/api/admin/social-rss-feeds/settings?feedId=${encodeURIComponent(feed.id)}`, {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ count: val })
-                        });
-                        if (!res.ok) throw new Error('save failed');
-                        setStatus({ type: 'success', message: `Saved posts-per-feed for "${feed.title}".` });
-                      } catch (_e) {
-                        setStatus({ type: 'error', message: 'Failed to save per-feed setting.' });
-                      }
-                    }}
-                    className="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs"
-                    title="Posts to show for this feed"
-                  >
-                    <option value={3}>3</option>
-                    <option value={6}>6</option>
-                    <option value={9}>9</option>
-                  </select>
                   <button onClick={() => handleEditFeed(feed)} className="px-3 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white">Edit</button>
                   <button onClick={() => setConfirmDelete({ id: feed.id, title: feed.title })} className="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white">Delete</button>
                 </div>

@@ -52,14 +52,8 @@ interface FeedData {
  */
 export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false): Promise<FeedData[]> {
   try {
-    // Read settings for how many posts to return per feed (default 6)
-    // Load global default and per-feed overrides
-    let globalPostsPerFeed = 6;
-    try {
-      const stored = await kv.get<number>('social_rss_posts_count');
-      if (stored && [3,6,9].includes(stored)) globalPostsPerFeed = stored;
-    } catch (_e) {}
-
+    // Fixed number of posts per feed (settings removed)
+    const globalPostsPerFeed = 3;
     const configuredFeeds = await loadSocialFeeds();
     const feedsPromises = configuredFeeds.map(async (feed) => {
       try {
@@ -296,19 +290,10 @@ export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false):
           };
         });
         
-        // Return all posts (including those with fallback images)
-        // Per-feed override (by feed.id) if available
-        let perFeedCount = globalPostsPerFeed;
-        try {
-          if ((feed as any).id) {
-            const ov = await kv.get<number>(`social_rss_posts_count:${(feed as any).id}`);
-            if (ov && [3,6,9].includes(ov)) perFeedCount = ov;
-          }
-        } catch (_e) {}
-
+        // Return a fixed count of posts (no overrides)
         return {
           title: feed.title,
-          posts: posts.slice(0, perFeedCount)
+          posts: posts.slice(0, globalPostsPerFeed)
         };
       } catch (error) {
         console.error(`Error fetching posts from ${feed.url}:`, error);

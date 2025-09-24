@@ -200,6 +200,8 @@ export default function Home() {
   const [isFeedAnimating, setIsFeedAnimating] = useState(false);
   // Show 3 posts at a time from the latest 6 loaded per feed
   const [currentFeedPage, setCurrentFeedPage] = useState(0); // 0 => first 3, 1 => next 3
+  // Track which posts have square (1:1) images so we can render them as squares
+  const [squarePostMap, setSquarePostMap] = useState<Record<string, boolean>>({});
 
   // Resolve image src: proxy only for instagram/fbcdn hosts
   const resolveImageSrc = (url: string) => {
@@ -770,9 +772,9 @@ export default function Home() {
                             transition: `opacity 500ms ease-out ${index * 150}ms, transform 500ms ease-out ${index * 150}ms`
                           }}
                         >
-                          {/* Image container with fixed 4:5 ratio and date overlay */}
+                          {/* Image container with dynamic aspect ratio (square if image is 1:1) and date overlay */}
                           <div 
-                            className="relative overflow-hidden flex-shrink-0 aspect-[4/5] w-full"
+                            className={`relative overflow-hidden flex-shrink-0 w-full ${squarePostMap[post.id] ? 'aspect-square' : 'aspect-[4/5]'}`}
                           >
                             <Image
                               src={resolveImageSrc(post.imageUrl)}
@@ -781,6 +783,14 @@ export default function Home() {
                               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 350px"
                               className="object-cover"
                               priority={index === 0}
+                              onLoadingComplete={(img) => {
+                                try {
+                                  const isSquare = img.naturalWidth === img.naturalHeight;
+                                  if (isSquare && !squarePostMap[post.id]) {
+                                    setSquarePostMap(prev => ({ ...prev, [post.id]: true }));
+                                  }
+                                } catch {}
+                              }}
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.src = '/images/breaking-news-fallback.svg';
