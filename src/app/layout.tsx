@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import AuthProvider from "@/components/AuthProvider";
 
 // Load the Outfit variable font from local files
 const outfit = localFont({
@@ -24,11 +25,13 @@ export default function RootLayout({
       <body suppressHydrationWarning
         className={`${outfit.variable} font-sans antialiased min-h-screen text-gray-900 dark:text-gray-100`}
       >
-        <div className="relative">
-          <div className="p-6">
-            {children}
+        <AuthProvider>
+          <div className="relative">
+            <div className="p-6">
+              {children}
+            </div>
           </div>
-        </div>
+        </AuthProvider>
       </body>
     </html>
   );

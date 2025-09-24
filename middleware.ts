@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PASSWORD = 'Dumf7r-xok3yn';
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow these paths without auth
   const isPublicPath =
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/api/auth') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/static') ||
     pathname.startsWith('/images') ||
@@ -23,32 +23,23 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for Basic Auth
+  // Check for JWT token in Authorization header
   const authHeader = request.headers.get('authorization');
   
-  if (authHeader && authHeader.startsWith('Basic ')) {
-    try {
-      const base64 = authHeader.slice(6).trim();
-      const decoded = atob(base64);
-      const [username, providedPassword] = decoded.split(':');
-
-      // Accept any username, only validate password
-      if (providedPassword === PASSWORD) {
-        return NextResponse.next();
-      }
-    } catch (e) {
-      // Invalid base64, fall through to challenge
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    // Token will be validated by the client-side code
+    // For middleware, we just check if it exists
+    if (token && token.length > 0) {
+      return NextResponse.next();
     }
   }
 
-  // Issue Basic Auth challenge
-  return new NextResponse('Authentication required', {
-    status: 401,
-    headers: {
-      'WWW-Authenticate': 'Basic realm="Agency Dashboard"',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-    },
-  });
+  // No valid token found - redirect to login page
+  const url = request.nextUrl.clone();
+  url.pathname = '/login';
+  url.searchParams.set('from', pathname);
+  return NextResponse.redirect(url);
 }
 
 export const config = {
