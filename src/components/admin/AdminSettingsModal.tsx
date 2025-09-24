@@ -46,6 +46,13 @@ export default function AdminSettingsModal() {
     }
   }, []);
 
+  // Auto-dismiss status toasts after 4s
+  useEffect(() => {
+    if (!status) return;
+    const t = setTimeout(() => setStatus(null), 4000);
+    return () => clearTimeout(t);
+  }, [status]);
+
   // Modal can only be closed by clicking the X button
 
   const handleDarkModeToggle = () => {
@@ -215,7 +222,12 @@ export default function AdminSettingsModal() {
             className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden z-[10000]"
           >
             {status && (
-              <div className={`fixed top-4 right-4 z-[10050] px-4 py-2 rounded shadow text-sm ${status.type === 'success' ? 'bg-green-600 text-white' : status.type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-700 text-white'}`}>{status.message}</div>
+              <div
+                className={`fixed top-4 right-4 z-[10050] px-4 py-2 rounded shadow text-sm ${status.type === 'success' ? 'bg-green-600 text-white' : status.type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-700 text-white'}`}
+                onAnimationEnd={() => {}}
+              >
+                {status.message}
+              </div>
             )}
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">

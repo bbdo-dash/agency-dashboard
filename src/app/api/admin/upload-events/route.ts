@@ -5,6 +5,10 @@ import path from 'path';
 import { kv } from '@vercel/kv';
 import { ensureEventsInKV } from '@/lib/migration';
 
+function isDevelopment() {
+  return process.env.NODE_ENV === 'development';
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -27,21 +31,19 @@ export async function POST(request: NextRequest) {
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const csvContent = buffer.toString('utf-8');
 
-    // Define the target path
-    const targetPath = path.join(process.cwd(), 'docs', 'werbe_events_2025_2026.csv');
-
-    // Create docs directory if it doesn't exist
-    const docsDir = path.join(process.cwd(), 'docs');
-    if (!existsSync(docsDir)) {
-      await mkdir(docsDir, { recursive: true });
+    // In development, keep a local copy for convenience
+    if (isDevelopment()) {
+      const targetPath = path.join(process.cwd(), 'docs', 'werbe_events_2025_2026.csv');
+      const docsDir = path.join(process.cwd(), 'docs');
+      if (!existsSync(docsDir)) {
+        await mkdir(docsDir, { recursive: true });
+      }
+      await writeFile(targetPath, buffer);
     }
 
-    // Write the file
-    await writeFile(targetPath, buffer);
-
     // Parse CSV to validate structure
-    const csvContent = buffer.toString('utf-8');
     const lines = csvContent.split('\n').filter(line => line.trim());
     
     if (lines.length < 2) {
@@ -71,10 +73,12 @@ export async function POST(request: NextRequest) {
       console.log(`CSV validation successful: ${parsedEvents.length} events parsed`);
       
       // In production, also update KV storage
-      if (process.env.NODE_ENV === 'production') {
+      if (!isDevelopment()) {
         try {
           await ensureEventsInKV();
           await kv.set('calendar_events', parsedEvents);
+          // Optionally store raw CSV for reference
+          await kv.set('calendar_events_csv', csvContent);
           console.log(`Updated KV storage with ${parsedEvents.length} events`);
         } catch (kvError) {
           console.error('Error updating KV storage:', kvError);
@@ -89,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Count events
-    const eventCount = lines.length - 1; // Subtract header row
+    const eventCount = parsedEvents.length;
 
     return NextResponse.json({ 
       success: true, 
