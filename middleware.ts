@@ -34,39 +34,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Support Basic Auth via WWW-Authenticate for robust protection on Vercel
-  const authHeader = request.headers.get('authorization');
-  if (authHeader && authHeader.startsWith('Basic ')) {
-    try {
-      const base64 = authHeader.slice(6).trim();
-      const decoded = atob(base64);
-      const [username, providedPassword] = decoded.split(':');
-
-      // Accept any username, only validate password
-      if (providedPassword === PASSWORD) {
-        const response = NextResponse.next();
-        // Set session cookie (expires when browser closes)
-        response.cookies.set(AUTH_COOKIE, AUTH_COOKIE_VALUE, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-        });
-        return response;
-      }
-    } catch (e) {
-      // fall through to challenge
-    }
-  }
-
-  // Issue Basic Auth challenge - this will show browser login dialog
-  return new NextResponse('Authentication required', {
-    status: 401,
-    headers: {
-      'WWW-Authenticate': 'Basic realm="Agency Dashboard"',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-    },
-  });
+  // Redirect to password page - more reliable than Basic Auth
+  const url = request.nextUrl.clone();
+  url.pathname = '/pass';
+  url.searchParams.set('from', pathname);
+  return NextResponse.redirect(url);
 }
 
 export const config = {
