@@ -57,7 +57,8 @@ function parseGermanDate(dateStr: string): Date {
  * @returns Array of CalendarEvent objects
  */
 export function parseCSVToEvents(csvContent: string): CalendarEvent[] {
-  const lines = csvContent.split('\n').filter(line => line.trim());
+  const normalized = csvContent.replace(/\r\n?/g, '\n');
+  const lines = normalized.split('\n').filter(line => line.trim());
   
   if (lines.length < 2) {
     return [];

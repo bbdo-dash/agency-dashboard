@@ -60,7 +60,7 @@ export async function GET() {
 // POST - Create new event
 export async function POST(request: NextRequest) {
   try {
-    const { title, description, startDate, endDate, location } = await request.json();
+    const { title, startDate, endDate, location } = await request.json();
     
     // Validate required fields
     if (!title || !startDate || !endDate || !location) {
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       const newEvent: CalendarEvent = {
         id: newEventId,
         title: title.trim(),
-        description: description?.trim() || `Event in ${location.trim()}`,
+        description: `Event in ${location.trim()}`,
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString(),
         location: location.trim()
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
       const newEvent: CalendarEvent = {
         id: newEventId,
         title: title.trim(),
-        description: description?.trim() || `Event in ${location.trim()}`,
+        description: `Event in ${location.trim()}`,
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString(),
         location: location.trim()
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update existing event
 export async function PUT(request: NextRequest) {
   try {
-    const { id, title, description, startDate, endDate, location } = await request.json();
+    const { id, title, startDate, endDate, location } = await request.json();
     
     // Validate required fields
     if (!id || !title || !startDate || !endDate || !location) {
@@ -191,7 +191,7 @@ export async function PUT(request: NextRequest) {
       existingEvents[eventIndex] = {
         ...existingEvents[eventIndex],
         title: title.trim(),
-        description: description?.trim() || existingEvents[eventIndex].description,
+        description: existingEvents[eventIndex].description,
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString(),
         location: location.trim()
@@ -230,7 +230,7 @@ export async function PUT(request: NextRequest) {
       existingEvents[eventIndex] = {
         ...existingEvents[eventIndex],
         title: title.trim(),
-        description: description?.trim() || existingEvents[eventIndex].description,
+        description: existingEvents[eventIndex].description,
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString(),
         location: location.trim()

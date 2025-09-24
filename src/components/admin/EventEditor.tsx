@@ -23,7 +23,6 @@ export default function EventEditor({ onClose }: EventEditorProps) {
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
-    description: '',
     startDate: '',
     endDate: '',
     location: ''
@@ -65,7 +64,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
     setEditingRowData({
       [event.id]: {
         title: event.title,
-        description: event.description,
+        description: '',
         startDate: event.startDate.split('T')[0],
         endDate: event.endDate.split('T')[0],
         location: event.location
@@ -96,7 +95,6 @@ export default function EventEditor({ onClose }: EventEditorProps) {
     setEditingEventId(null);
     setFormData({
       title: '',
-      description: '',
       startDate: '',
       endDate: '',
       location: ''
@@ -122,7 +120,6 @@ export default function EventEditor({ onClose }: EventEditorProps) {
         },
         body: JSON.stringify({
           title: formData.title,
-          description: formData.description,
           startDate: formData.startDate,
           endDate: formData.endDate,
           location: formData.location
@@ -137,7 +134,6 @@ export default function EventEditor({ onClose }: EventEditorProps) {
         setShowAddForm(true);
         setFormData({
           title: '',
-          description: '',
           startDate: '',
           endDate: '',
           location: ''
@@ -185,7 +181,6 @@ export default function EventEditor({ onClose }: EventEditorProps) {
     // Check if any changes were made
     const hasChanges = 
       originalEvent.title !== rowData.title ||
-      originalEvent.description !== rowData.description ||
       originalEvent.startDate !== new Date(rowData.startDate).toISOString() ||
       originalEvent.endDate !== new Date(rowData.endDate).toISOString() ||
       originalEvent.location !== rowData.location;
@@ -211,7 +206,6 @@ export default function EventEditor({ onClose }: EventEditorProps) {
         body: JSON.stringify({
           id: eventId,
           title: rowData.title,
-          description: rowData.description,
           startDate: rowData.startDate,
           endDate: rowData.endDate,
           location: rowData.location
@@ -380,18 +374,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
               />
             </div>
             
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
-                placeholder="Event description (optional)"
-              />
-            </div>
+            {/* Description removed as it's not used on dashboard */}
           </div>
           
           <div className="flex justify-end space-x-3 mt-4">
@@ -458,9 +441,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Location
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Description
-                </th>
+                
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Actions
                 </th>
@@ -469,7 +450,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {events.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-4 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={5} className="px-4 py-4 text-center text-gray-500 dark:text-gray-400">
                     No events found
                   </td>
                 </tr>
@@ -546,22 +527,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
                         )}
                       </td>
                       
-                      {/* Beschreibung */}
-                      <td className="px-4 py-3">
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            value={rowData?.description || ''}
-                            onChange={(e) => updateInlineField(event.id, 'description', e.target.value)}
-                            className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                            placeholder="Description"
-                          />
-                        ) : (
-                          <div className="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">
-                            {event.description}
-                          </div>
-                        )}
-                      </td>
+                      {/* Description column removed */}
                       
                       {/* Aktionen */}
                       <td className="px-4 py-3 whitespace-nowrap">

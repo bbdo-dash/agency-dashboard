@@ -88,6 +88,32 @@ export default function AdminSettingsModal() {
 
     setIsUploading(true);
     try {
+      // Client-side validation
+      const filename = selectedFile.name || '';
+      const isCSV = filename.toLowerCase().endsWith('.csv');
+      if (!isCSV) {
+        setStatus({ type: 'error', message: 'Please select a .csv file.' });
+        return;
+      }
+      const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+      if (selectedFile.size > MAX_SIZE_BYTES) {
+        const sizeMb = Math.round((selectedFile.size / (1024 * 1024)) * 10) / 10;
+        setStatus({ type: 'error', message: `File is ${sizeMb}MB. Maximum size is 10MB.` });
+        return;
+      }
+
+      // Lightweight header validation (Name, Datum, Ort)
+      try {
+        const text = await selectedFile.text();
+        const firstLine = (text.split(/\r?\n/)[0] || '').toLowerCase();
+        if (!(firstLine.includes('name') && firstLine.includes('datum') && firstLine.includes('ort'))) {
+          setStatus({ type: 'error', message: 'CSV must include header columns: Name, Datum, Ort.' });
+          return;
+        }
+      } catch (_) {
+        // If reading fails, continue and let server validate
+      }
+
       const formData = new FormData();
       formData.append('csvFile', selectedFile);
 
@@ -104,8 +130,17 @@ export default function AdminSettingsModal() {
         // Background refresh of dashboard API
         fetch('/api/dashboard?refresh=true', { cache: 'no-store' }).catch(() => {});
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
+        // Handle non-JSON error bodies gracefully
+        let serverMessage = 'Upload failed';
+        try {
+          const errorData = await response.json();
+          serverMessage = errorData.error || serverMessage;
+        } catch {
+          try {
+            serverMessage = (await response.text()).slice(0, 200) || serverMessage;
+          } catch {}
+        }
+        throw new Error(serverMessage);
       }
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -227,7 +262,7 @@ export default function AdminSettingsModal() {
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
-                RSS Feeds
+                News Feed
               </button>
               <button
                 onClick={() => setActiveTab('social')}
@@ -319,6 +354,9 @@ export default function AdminSettingsModal() {
                               Selected file: {selectedFile.name}
                             </p>
                           )}
+                          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            Requirements: CSV (.csv), max 10MB. Header must include <strong>Name</strong>, <strong>Datum</strong>, <strong>Ort</strong>. Date format: <strong>DD.MM.YYYY</strong> or <strong>DD.–DD.MM.YYYY</strong>.
+                          </p>
                         </div>
                       </div>
 
@@ -446,32 +484,10 @@ export default function AdminSettingsModal() {
                     Social Media RSS Management
                   </h3>
                   <div className="space-y-4">
-                    <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-2">Configured Social Feeds</h4>
-                      {isLoadingSocial ? (
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Loading…</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {socialFeeds.map((f) => (
-                            <div key={f.id} className="flex items-start justify-between text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-3 py-2">
-                              <div className="min-w-0 pr-3">
-                                <p className="font-medium text-gray-900 dark:text-white truncate">{f.title}</p>
-                                <p className="text-gray-600 dark:text-gray-400 break-all">{f.url}</p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className={`shrink-0 text-xs ${f.isActive ? 'text-green-600' : 'text-gray-500'}`}>{f.isActive ? 'Active' : 'Inactive'}</span>
-                                <button onClick={() => { setSocialManagerInitialFeed(f as any); setShowSocialRSSManager(true); }} className="px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white">Edit</button>
-                                <button onClick={async () => { if (!confirm(`Delete feed \"${f.title}\"?`)) return; const res = await fetch(`/api/admin/social-rss-feeds/${f.id}`, { method: 'DELETE' }); if (res.ok) { try { const r = await fetch('/api/admin/social-rss-feeds', { cache: 'no-store' }); const d = await r.json(); setSocialFeeds(Array.isArray(d.feeds) ? d.feeds : []); } catch (_) {} } else { const err = await res.json().catch(() => ({} as any)); alert(err?.error || 'Delete failed'); } }} className="px-2 py-1 rounded bg-red-600 hover:bg-red-700 text-white">Delete</button>
-                              </div>
-                            </div>
-                          ))}
-                          {socialFeeds.length === 0 && (
-                            <p className="text-sm text-gray-600 dark:text-gray-300">No social feeds configured yet.</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4 space-y-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Manage your social RSS feeds in the manager window below.
+                    </p>
+                    <div className="pt-2 space-y-2">
                       <button
                         onClick={() => setShowSocialRSSManager(true)}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
