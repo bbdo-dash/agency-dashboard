@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Cookie name used for simple password-gate
-const AUTH_COOKIE = 'site_auth';
-const AUTH_COOKIE_VALUE = 'verified';
+const PASSWORD = 'Dumf7r-xok3yn';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow these paths without auth
   const isPublicPath =
-    pathname.startsWith('/pass') ||
-    pathname.startsWith('/api/auth/password') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/static') ||
     pathname.startsWith('/images') ||
@@ -27,31 +23,32 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for authentication cookie
-  const authCookie = request.cookies.get(AUTH_COOKIE)?.value;
+  // Check for Basic Auth
+  const authHeader = request.headers.get('authorization');
   
-  // If user is authenticated, allow access
-  if (authCookie === AUTH_COOKIE_VALUE) {
-    return NextResponse.next();
+  if (authHeader && authHeader.startsWith('Basic ')) {
+    try {
+      const base64 = authHeader.slice(6).trim();
+      const decoded = atob(base64);
+      const [username, providedPassword] = decoded.split(':');
+
+      // Accept any username, only validate password
+      if (providedPassword === PASSWORD) {
+        return NextResponse.next();
+      }
+    } catch (e) {
+      // Invalid base64, fall through to challenge
+    }
   }
 
-  // User is not authenticated - redirect to password page
-  const url = request.nextUrl.clone();
-  url.pathname = '/pass';
-  url.searchParams.set('from', pathname);
-  
-  const response = NextResponse.redirect(url);
-  
-  // Set a temporary cookie to prevent redirect loops
-  response.cookies.set('auth_redirect', 'true', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60, // 1 minute
+  // Issue Basic Auth challenge
+  return new NextResponse('Authentication required', {
+    status: 401,
+    headers: {
+      'WWW-Authenticate': 'Basic realm="Agency Dashboard"',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+    },
   });
-  
-  return response;
 }
 
 export const config = {
