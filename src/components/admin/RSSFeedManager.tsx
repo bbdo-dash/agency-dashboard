@@ -168,7 +168,9 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
       });
 
       if (response.ok) {
-        setStatus({ type: 'success', message: 'RSS feeds updated. Articles were reloaded and shuffled.' });
+        setStatus({ type: 'success', message: 'RSS feeds updated. Reloading…' });
+        // Ensure UI reflects latest news immediately
+        window.location.reload();
       } else {
         throw new Error('Error updating RSS feeds');
       }

@@ -32,6 +32,7 @@ export default function AdminSettingsModal() {
   // Social RSS overview
   const [socialFeeds, setSocialFeeds] = useState<Array<{ id: string; url: string; title: string; isActive: boolean }>>([]);
   const [isLoadingSocial, setIsLoadingSocial] = useState(false);
+  const [isRefreshingSocial, setIsRefreshingSocial] = useState(false);
 
   // Load settings on mount
   useEffect(() => {
@@ -480,23 +481,24 @@ export default function AdminSettingsModal() {
                       <button
                         onClick={async () => {
                           try {
-                            // Force refresh the dashboard data
-                            await fetch('/api/dashboard?refresh=true', { cache: 'no-store' });
-                            
-                            // Show success message
-                            alert('Dashboard refreshed successfully! Changes should now be visible.');
-                            
-                            // Optionally reload the page to ensure all caches are cleared
-                            if (confirm('Reload the page to see changes immediately?')) {
-                              window.location.reload();
+                            setIsRefreshingSocial(true);
+                            const response = await fetch('/api/dashboard?refresh=true', { cache: 'no-store' });
+                            if (!response.ok) {
+                              throw new Error('Refresh failed');
                             }
+                            setStatus({ type: 'success', message: 'Dashboard refreshed. Reloading…' });
+                            // Ensure the UI reflects latest data immediately
+                            window.location.reload();
                           } catch (_e) {
-                            alert('Failed to refresh dashboard. Please try again.');
+                            setStatus({ type: 'error', message: 'Failed to refresh dashboard. Please try again.' });
+                          } finally {
+                            setIsRefreshingSocial(false);
                           }
                         }}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                        disabled={isRefreshingSocial}
+                        className={`w-full text-white font-medium py-2 px-4 rounded-lg transition-colors ${isRefreshingSocial ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
                       >
-                        🔄 Refresh Social Feeds on Dashboard
+                        {isRefreshingSocial ? 'Refreshing…' : '🔄 Refresh Social Feeds on Dashboard'}
                       </button>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
                         Updates the dashboard to fetch posts from the latest Social RSS feeds
