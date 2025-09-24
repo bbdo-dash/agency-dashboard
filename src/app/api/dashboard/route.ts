@@ -5,6 +5,10 @@ import { loadEventsFromCSV, getEventsCSVPath } from '@/lib/csvParser';
 import { kv } from '@vercel/kv';
 import { ensureEventsInKV } from '@/lib/migration';
 
+// Disable all caching for this route (no response cache, no CDN copy)
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Fallback news data when the News API doesn't return results
 async function getFallbackNewsData() {
   // Return fallback data directly without API calls
@@ -287,19 +291,14 @@ export async function GET(request: NextRequest) {
     
     console.log(`Dashboard API - responding with ${response.news.length} news items, ${instagramFeeds.length} Instagram feeds, and ${events.length} events`);
     
-    const CACHE_DURATION = forceRefresh ? 0 : 300; // 5 minutes for normal requests, no cache for forced refresh
-    
+    // Always return with no-cache headers to ensure immediate freshness
     return NextResponse.json(response, {
       headers: {
-        'Cache-Control': forceRefresh
-          ? 'no-cache, no-store, must-revalidate'
-          : `public, s-maxage=${CACHE_DURATION}, stale-while-revalidate=${CACHE_DURATION}`,
-        'CDN-Cache-Control': forceRefresh
-          ? 'no-cache'
-          : `public, s-maxage=${CACHE_DURATION}`,
-        'Vercel-CDN-Cache-Control': forceRefresh
-          ? 'no-cache'
-          : `public, s-maxage=${CACHE_DURATION}`
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'CDN-Cache-Control': 'no-cache',
+        'Vercel-CDN-Cache-Control': 'no-cache'
       }
     });
   } catch (error) {
