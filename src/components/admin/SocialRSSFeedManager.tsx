@@ -49,7 +49,7 @@ export default function SocialRSSFeedManager({ onClose, initialFeed = null }: So
         }
         // load per-feed overrides
         const map: Record<string, number> = {};
-        for (const f of (data?.feeds || [])) {
+        for (const f of feeds) {
           if (f.id) {
             const r = await fetch(`/api/admin/social-rss-feeds/settings?feedId=${encodeURIComponent(f.id)}`, { cache: 'no-store' });
             if (r.ok) {
