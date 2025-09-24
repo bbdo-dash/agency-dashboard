@@ -64,6 +64,18 @@ export function parseCSVToEvents(csvContent: string): CalendarEvent[] {
     return [];
   }
   
+  // Detect delimiter (support "," or ";"). Prefer the one that yields >= 3 columns.
+  const header = lines[0];
+  const candidateDelimiters = [',', ';'];
+  let delimiter = ',';
+  for (const cand of candidateDelimiters) {
+    const cols = parseCSVLine(header, cand);
+    if (cols.length >= 3) {
+      delimiter = cand;
+      break;
+    }
+  }
+
   // Skip header row
   const dataLines = lines.slice(1);
   
@@ -74,7 +86,7 @@ export function parseCSVToEvents(csvContent: string): CalendarEvent[] {
     if (!line.trim()) return;
     
     // Parse CSV line (handle quoted fields)
-    const fields = parseCSVLine(line);
+    const fields = parseCSVLine(line, delimiter);
     
     if (fields.length >= 3) {
       const [name, dateStr, location] = fields;
@@ -126,7 +138,7 @@ export function parseCSVToEvents(csvContent: string): CalendarEvent[] {
  * @param line - CSV line to parse
  * @returns Array of field values
  */
-function parseCSVLine(line: string): string[] {
+function parseCSVLine(line: string, delimiter: string = ','): string[] {
   const fields: string[] = [];
   let current = '';
   let inQuotes = false;
@@ -136,7 +148,7 @@ function parseCSVLine(line: string): string[] {
     
     if (char === '"') {
       inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
+    } else if (char === delimiter && !inQuotes) {
       fields.push(current);
       current = '';
     } else {
