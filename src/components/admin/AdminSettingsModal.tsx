@@ -134,8 +134,9 @@ export default function AdminSettingsModal() {
         setStatus({ type: 'success', message: `Events updated. ${result.eventCount} events were loaded.` });
         setSelectedFile(null);
         
-        // Background refresh of dashboard API
-        fetch('/api/dashboard?refresh=true', { cache: 'no-store' }).catch(() => {});
+        // Refresh dashboard data and reload the page so changes are visible immediately
+        try { await fetch('/api/dashboard?refresh=true', { cache: 'no-store' }); } catch {}
+        window.location.reload();
       } else {
         // Handle non-JSON error bodies gracefully
         let serverMessage = 'Upload failed';

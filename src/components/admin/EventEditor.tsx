@@ -139,8 +139,9 @@ export default function EventEditor({ onClose }: EventEditorProps) {
           location: ''
         });
         setStatus({ type: 'success', message: 'Event successfully added.' });
-        // Background refresh of dashboard API (no blocking and no modal close)
-        fetch('/api/dashboard?refresh=true', { cache: 'no-store' }).catch(() => {});
+        // Refresh dashboard data and reload the page
+        try { await fetch('/api/dashboard?refresh=true', { cache: 'no-store' }); } catch {}
+        window.location.reload();
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error saving');
@@ -222,8 +223,9 @@ export default function EventEditor({ onClose }: EventEditorProps) {
           return newData;
         });
         setStatus({ type: 'success', message: 'Event successfully updated.' });
-        // Background refresh of dashboard API
-        fetch('/api/dashboard?refresh=true', { cache: 'no-store' }).catch(() => {});
+        // Refresh dashboard data and reload the page
+        try { await fetch('/api/dashboard?refresh=true', { cache: 'no-store' }); } catch {}
+        window.location.reload();
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error saving');
