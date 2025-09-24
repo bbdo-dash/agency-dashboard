@@ -27,6 +27,7 @@ export default function AdminSettingsModal() {
   const [rssUrl, setRssUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
 
   // Social RSS overview
   const [socialFeeds, setSocialFeeds] = useState<Array<{ id: string; url: string; title: string; isActive: boolean }>>([]);
@@ -96,19 +97,11 @@ export default function AdminSettingsModal() {
 
       if (response.ok) {
         const result = await response.json();
-        alert(`Events successfully updated! ${result.eventCount} events were loaded.`);
+        setStatus({ type: 'success', message: `Events updated. ${result.eventCount} events were loaded.` });
         setSelectedFile(null);
         
-        // Force refresh the dashboard data
-        try {
-          await fetch('/api/dashboard?refresh=true', { cache: 'no-store' });
-          // Trigger page reload to show updated events
-          window.location.reload();
-        } catch (error) {
-          console.error('Error refreshing dashboard:', error);
-          // Still reload the page even if refresh fails
-          window.location.reload();
-        }
+        // Background refresh of dashboard API
+        fetch('/api/dashboard?refresh=true', { cache: 'no-store' }).catch(() => {});
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Upload failed');
@@ -116,7 +109,7 @@ export default function AdminSettingsModal() {
     } catch (error) {
       console.error('Error uploading file:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      alert(`Error uploading file: ${errorMessage}`);
+      setStatus({ type: 'error', message: `Error uploading file: ${errorMessage}` });
     } finally {
       setIsUploading(false);
     }
@@ -143,7 +136,7 @@ export default function AdminSettingsModal() {
       }
     } catch (error) {
       console.error('Error analyzing RSS feed:', error);
-      alert('Error analyzing RSS feed. Please check the URL.');
+      setStatus({ type: 'error', message: 'Error analyzing RSS feed. Please check the URL.' });
     } finally {
       setIsAnalyzing(false);
     }
@@ -185,6 +178,9 @@ export default function AdminSettingsModal() {
             ref={modalRef}
             className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden z-[10000]"
           >
+            {status && (
+              <div className={`fixed top-4 right-4 z-[10050] px-4 py-2 rounded shadow text-sm ${status.type === 'success' ? 'bg-green-600 text-white' : status.type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-700 text-white'}`}>{status.message}</div>
+            )}
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">

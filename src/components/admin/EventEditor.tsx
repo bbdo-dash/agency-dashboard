@@ -20,6 +20,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
   const [loading, setLoading] = useState(true);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
     description: '',
@@ -105,7 +106,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
 
   const handleSave = async () => {
     if (!formData.title || !formData.startDate || !formData.endDate || !formData.location) {
-      alert('Please fill in all required fields.');
+      setStatus({ type: 'error', message: 'Please fill in all required fields.' });
       return;
     }
 
@@ -132,7 +133,8 @@ export default function EventEditor({ onClose }: EventEditorProps) {
         // Reload and sort events
         await loadEvents();
         setEditingEventId(null);
-        setShowAddForm(false);
+        // Keep the add form open for multiple entries; clear inputs
+        setShowAddForm(true);
         setFormData({
           title: '',
           description: '',
@@ -140,25 +142,16 @@ export default function EventEditor({ onClose }: EventEditorProps) {
           endDate: '',
           location: ''
         });
-        alert('Event successfully added!');
-        
-        // Force refresh the dashboard data to show the new event
-        try {
-          await fetch('/api/dashboard?refresh=true', { cache: 'no-store' });
-          // Trigger page reload to show updated events on dashboard
-          window.location.reload();
-        } catch (error) {
-          console.error('Error refreshing dashboard:', error);
-          // Still reload the page even if refresh fails
-          window.location.reload();
-        }
+        setStatus({ type: 'success', message: 'Event successfully added.' });
+        // Background refresh of dashboard API (no blocking and no modal close)
+        fetch('/api/dashboard?refresh=true', { cache: 'no-store' }).catch(() => {});
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error saving');
       }
     } catch (error) {
       console.error('Error saving event:', error);
-      alert(`Error saving: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setStatus({ type: 'error', message: `Error saving: ${error instanceof Error ? error.message : 'Unknown error'}` });
     } finally {
       setSaving(false);
     }
@@ -167,7 +160,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
   const handleInlineSave = async (eventId: string) => {
     const rowData = editingRowData[eventId];
     if (!rowData || !rowData.title || !rowData.startDate || !rowData.endDate || !rowData.location) {
-      alert('Please fill in all required fields.');
+      setStatus({ type: 'error', message: 'Please fill in all required fields.' });
       return;
     }
 
@@ -177,7 +170,7 @@ export default function EventEditor({ onClose }: EventEditorProps) {
       console.error('Original event not found for ID:', eventId);
       console.log('Available events:', events.map(e => ({ id: e.id, title: e.title })));
       console.log('Editing row data:', rowData);
-      alert('Error: Event not found. Please try again.');
+      setStatus({ type: 'error', message: 'Error: Event not found. Please try again.' });
       // Cancel edit mode and reload events
       setEditingEventId(null);
       setEditingRowData(prev => {
@@ -234,25 +227,16 @@ export default function EventEditor({ onClose }: EventEditorProps) {
           delete newData[eventId];
           return newData;
         });
-        alert('Event successfully updated!');
-        
-        // Force refresh the dashboard data to show the updated event
-        try {
-          await fetch('/api/dashboard?refresh=true', { cache: 'no-store' });
-          // Trigger page reload to show updated events on dashboard
-          window.location.reload();
-        } catch (error) {
-          console.error('Error refreshing dashboard:', error);
-          // Still reload the page even if refresh fails
-          window.location.reload();
-        }
+        setStatus({ type: 'success', message: 'Event successfully updated.' });
+        // Background refresh of dashboard API
+        fetch('/api/dashboard?refresh=true', { cache: 'no-store' }).catch(() => {});
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error saving');
       }
     } catch (error) {
       console.error('Error saving event:', error);
-      alert(`Error saving: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setStatus({ type: 'error', message: `Error saving: ${error instanceof Error ? error.message : 'Unknown error'}` });
     } finally {
       setSaving(false);
     }
@@ -271,25 +255,16 @@ export default function EventEditor({ onClose }: EventEditorProps) {
       if (response.ok) {
         // Reload and sort events
         await loadEvents();
-        alert('Event successfully deleted!');
-        
-        // Force refresh the dashboard data to show the updated event list
-        try {
-          await fetch('/api/dashboard?refresh=true', { cache: 'no-store' });
-          // Trigger page reload to show updated events on dashboard
-          window.location.reload();
-        } catch (error) {
-          console.error('Error refreshing dashboard:', error);
-          // Still reload the page even if refresh fails
-          window.location.reload();
-        }
+        setStatus({ type: 'success', message: 'Event successfully deleted.' });
+        // Background refresh of dashboard API
+        fetch('/api/dashboard?refresh=true', { cache: 'no-store' }).catch(() => {});
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error deleting');
       }
     } catch (error) {
       console.error('Error deleting event:', error);
-      alert(`Error deleting: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setStatus({ type: 'error', message: `Error deleting: ${error instanceof Error ? error.message : 'Unknown error'}` });
     }
   };
 
@@ -307,6 +282,19 @@ export default function EventEditor({ onClose }: EventEditorProps) {
 
   return (
     <div className="space-y-6">
+      {/* Inline status toast */}
+      {status && (
+        <div
+          className={`fixed top-4 right-4 z-50 px-4 py-2 rounded shadow-lg text-sm ${
+            status.type === 'success' ? 'bg-green-600 text-white' : status.type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-700 text-white'
+          }`}
+          onAnimationEnd={() => {
+            /* no-op */
+          }}
+        >
+          {status.message}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">

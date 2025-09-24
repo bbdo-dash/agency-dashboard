@@ -100,6 +100,32 @@ export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false):
           } else if (item.enclosure && item.enclosure['@_url']) {
             imageUrl = item.enclosure['@_url'];
             console.log(`Found enclosure image: ${imageUrl}`);
+          } else if (item.image && (item.image.url || (Array.isArray(item.image) && item.image[0]?.url))) {
+            // Some feeds provide <image><url>…</url></image> either on item or channel level
+            // Prefer item-level if present
+            const candidateUrl = item.image.url || (Array.isArray(item.image) ? item.image[0]?.url : '');
+            if (typeof candidateUrl === 'string' && candidateUrl.startsWith('http')) {
+              imageUrl = candidateUrl;
+              console.log(`Found image.url: ${imageUrl}`);
+            }
+          } else if (item.enclosure) {
+            // Enclosure can also be a string URL or an object with "url"
+            const encUrl = typeof item.enclosure === 'string' ? item.enclosure : (item.enclosure['@_url'] || item.enclosure.url);
+            if (encUrl) {
+              imageUrl = encUrl;
+              console.log(`Found enclosure image (generic): ${imageUrl}`);
+            }
+          } else if (item['media:group']) {
+            const mg = item['media:group'];
+            const mgContentUrl = mg?.['media:content']?.['@_url'] || mg?.['media:content']?.url;
+            const mgThumbUrl = mg?.['media:thumbnail']?.['@_url'] || mg?.['media:thumbnail']?.url;
+            if (mgContentUrl) {
+              imageUrl = mgContentUrl;
+              console.log(`Found media:group content image: ${imageUrl}`);
+            } else if (mgThumbUrl) {
+              imageUrl = mgThumbUrl;
+              console.log(`Found media:group thumbnail image: ${imageUrl}`);
+            }
           } else if (item['content:encoded']) {
             // Try to extract image from content:encoded
             const contentEncoded = item['content:encoded'];
@@ -113,9 +139,9 @@ export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false):
               // Standard img tag with data-src
               contentEncoded.match(/<img[^>]+data-src="([^"]+)"/),
               // Image in background style
-              contentEncoded.match(/background-image:url\(['"]?([^'"]+)['"]?\)/),
+              contentEncoded.match(/background-image:url\(['"]?([^'\"]+)['"]?\)/),
               // Image in style attribute
-              contentEncoded.match(/background[^:]*:\s*url\(['"]?([^'"]+)['"]?\)/),
+              contentEncoded.match(/background[^:]*:\s*url\(['"]?([^'\"]+)['"]?\)/),
               // Other CDN patterns
               contentEncoded.match(/https:\/\/[^"'\s<>]+\.(?:s3|amazonaws|cloudfront)[^"'\s<>]+/),
               // Generic image URLs
@@ -144,6 +170,12 @@ export async function fetchInstagramPostsFromRSS(forceRefresh: boolean = false):
           // Try to look for media:thumbnail as a fallback
           if (!imageUrl && item['media:thumbnail'] && item['media:thumbnail']['@_url']) {
             imageUrl = item['media:thumbnail']['@_url'];
+          }
+
+          // As a last structured fallback, some feeds place channel-level image at result.rss.channel.image.url
+          if (!imageUrl && channelData?.image?.url && typeof channelData.image.url === 'string') {
+            imageUrl = channelData.image.url;
+            console.log(`Using channel image as fallback: ${imageUrl}`);
           }
           
           // Extract the description, which may contain the image

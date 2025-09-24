@@ -22,6 +22,8 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+  const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const loadImages = useCallback(async () => {
     try {
@@ -64,18 +66,18 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
 
       if (response.ok) {
         const result = await response.json();
-        alert(result.message);
+        setStatus({ type: 'success', message: result.message || 'Upload complete.' });
         await loadImages(); // Reload images
         // Signal to ImageViewer to refresh
         localStorage.setItem('slideshowUpdated', 'true');
         window.dispatchEvent(new StorageEvent('storage', { key: 'slideshowUpdated' }));
       } else {
         const error = await response.json();
-        alert(`Error uploading: ${error.error}`);
+        setStatus({ type: 'error', message: `Error uploading: ${error.error}` });
       }
     } catch (error) {
       console.error('Error uploading files:', error);
-      alert('Error uploading files');
+      setStatus({ type: 'error', message: 'Error uploading files' });
     } finally {
       setUploading(false);
     }
@@ -108,7 +110,6 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
   };
 
   const handleDeleteImage = async (filename: string) => {
-    if (!confirm('Do you really want to delete this image?')) return;
 
     try {
       const response = await fetch(`/api/admin/slideshow?filename=${encodeURIComponent(filename)}`, {
@@ -122,11 +123,11 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
         window.dispatchEvent(new StorageEvent('storage', { key: 'slideshowUpdated' }));
       } else {
         const error = await response.json();
-        alert(`Error deleting: ${error.error}`);
+        setStatus({ type: 'error', message: `Error deleting: ${error.error}` });
       }
     } catch (error) {
       console.error('Error deleting image:', error);
-      alert('Error deleting image');
+      setStatus({ type: 'error', message: 'Error deleting image' });
     }
   };
 
@@ -178,7 +179,7 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
       if (!response.ok) {
         // Revert on error
         await loadImages();
-        alert('Error saving new order');
+        setStatus({ type: 'error', message: 'Error saving new order' });
       } else {
         // Signal to ImageViewer to refresh
         localStorage.setItem('slideshowUpdated', 'true');
@@ -187,7 +188,7 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
     } catch (error) {
       console.error('Error reordering images:', error);
       await loadImages(); // Revert on error
-      alert('Error saving new order');
+      setStatus({ type: 'error', message: 'Error saving new order' });
     } finally {
       setReordering(false);
     }
@@ -203,6 +204,9 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
 
   return (
     <div className="space-y-6 max-h-full overflow-y-auto">
+      {status && (
+        <div className={`fixed top-4 right-4 z-[10010] px-4 py-2 rounded shadow text-sm ${status.type === 'success' ? 'bg-green-600 text-white' : status.type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-700 text-white'}`}>{status.message}</div>
+      )}
       <div className="flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 pb-4 border-b border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           Slideshow Management
@@ -317,7 +321,7 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
                       #{index + 1}
                     </span>
                     <button
-                      onClick={() => handleDeleteImage(image.name)}
+                      onClick={() => setConfirmDelete(image.name)}
                       className="bg-red-600 hover:bg-red-700 text-white p-1 rounded"
                       title="Delete image"
                     >
@@ -346,6 +350,19 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
           <li>• <strong>Scroll:</strong> Scroll in the image gallery to see all slides</li>
         </ul>
       </div>
+
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10020]">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm mx-4 p-5">
+            <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-2">Delete image?</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Are you sure you want to delete this image?</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setConfirmDelete(null)} className="px-4 py-2 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200">Cancel</button>
+              <button onClick={async () => { const name = confirmDelete; setConfirmDelete(null); if (name) await handleDeleteImage(name); }} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -22,6 +22,8 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingFeed, setEditingFeed] = useState<RSSFeed | null>(null);
+  const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -72,7 +74,7 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
 
   const handleSaveFeed = async () => {
     if (!formData.url.trim() || !formData.title.trim()) {
-      alert('Please fill in all required fields.');
+      setStatus({ type: 'error', message: 'Please fill in all required fields.' });
       return;
     }
 
@@ -102,24 +104,20 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
         setShowAddForm(false);
         setEditingFeed(null);
         setFormData({ url: '', title: '', description: '' });
-        alert(editingFeed ? 'RSS feed successfully updated!' : 'RSS feed successfully added!');
+        setStatus({ type: 'success', message: editingFeed ? 'RSS feed successfully updated.' : 'RSS feed successfully added.' });
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error saving');
       }
     } catch (error) {
       console.error('Error saving RSS feed:', error);
-      alert(`Error saving: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setStatus({ type: 'error', message: `Error saving: ${error instanceof Error ? error.message : 'Unknown error'}` });
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteFeed = async (feedId: string, feedTitle: string) => {
-    if (!confirm(`Are you sure you want to delete the RSS feed "${feedTitle}"?\n\nThis action cannot be undone.`)) {
-      return;
-    }
-
     try {
       const response = await fetch(`/api/admin/rss-feeds/${feedId}`, {
         method: 'DELETE',
@@ -127,14 +125,14 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
 
       if (response.ok) {
         await loadFeeds();
-        alert(`RSS feed "${feedTitle}" successfully deleted.`);
+        setStatus({ type: 'success', message: `RSS feed "${feedTitle}" deleted.` });
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error deleting');
       }
     } catch (error) {
       console.error('Error deleting RSS feed:', error);
-      alert(`Error deleting: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setStatus({ type: 'error', message: `Error deleting: ${error instanceof Error ? error.message : 'Unknown error'}` });
     }
   };
 
@@ -156,7 +154,7 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
       }
     } catch (error) {
       console.error('Error toggling RSS feed status:', error);
-      alert(`Error updating: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setStatus({ type: 'error', message: `Error updating: ${error instanceof Error ? error.message : 'Unknown error'}` });
     }
   };
 
@@ -170,15 +168,13 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
       });
 
       if (response.ok) {
-        alert('RSS feeds successfully updated! Articles were reloaded and shuffled.');
-        // Optionally reload the page to show updated articles
-        window.location.reload();
+        setStatus({ type: 'success', message: 'RSS feeds updated. Articles were reloaded and shuffled.' });
       } else {
         throw new Error('Error updating RSS feeds');
       }
     } catch (error) {
       console.error('Error refreshing RSS feeds:', error);
-      alert(`Error updating: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setStatus({ type: 'error', message: `Error updating: ${error instanceof Error ? error.message : 'Unknown error'}` });
     } finally {
       setIsLoading(false);
     }
@@ -197,6 +193,10 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
 
   return (
     <div className="space-y-6">
+      {/* Toast */}
+      {status && (
+        <div className={`fixed top-4 right-4 z-[10010] px-4 py-2 rounded shadow text-sm ${status.type === 'success' ? 'bg-green-600 text-white' : status.type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-700 text-white'}`}>{status.message}</div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -333,7 +333,7 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
                   </button>
                   
                   <button
-                    onClick={() => handleDeleteFeed(feed.id, feed.title)}
+                    onClick={() => setConfirmDelete({ id: feed.id, title: feed.title })}
                     className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
                     title="Delete"
                   >
@@ -415,6 +415,20 @@ export default function RSSFeedManager({ onClose }: RSSFeedManagerProps) {
               >
                 {isSaving ? 'Saving...' : (editingFeed ? 'Update' : 'Add')}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inline confirm dialog for delete */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10020]">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm mx-4 p-5">
+            <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-2">Delete RSS feed?</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Are you sure you want to delete "{confirmDelete.title}"? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setConfirmDelete(null)} className="px-4 py-2 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200">Cancel</button>
+              <button onClick={async () => { const id = confirmDelete.id; const title = confirmDelete.title; setConfirmDelete(null); await handleDeleteFeed(id, title); }} className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white">Delete</button>
             </div>
           </div>
         </div>
