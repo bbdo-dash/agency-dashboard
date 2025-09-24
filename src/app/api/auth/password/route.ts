@@ -18,13 +18,13 @@ export async function POST(request: NextRequest) {
     }
 
     const response = NextResponse.json({ success: true });
-    // Set httpOnly cookie for 30 days
+    // Set httpOnly session cookie (expires when browser closes)
     response.cookies.set(AUTH_COOKIE, AUTH_COOKIE_VALUE, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 * 30,
+      // No maxAge = session cookie that expires when browser closes
     });
     return response;
   } catch (error) {
