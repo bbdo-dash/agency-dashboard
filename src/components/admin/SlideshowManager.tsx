@@ -25,6 +25,11 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
+  // Upload limits (UI guidance + client-side guardrails)
+  const MAX_TOTAL_SIZE_MB = 100; // total selected files
+  const MAX_FILE_SIZE_MB = 4;    // per file
+  const MAX_FILES = 200;         // sanity cap
+
   const loadImages = useCallback(async () => {
     try {
       setLoading(true);
@@ -52,29 +57,69 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('replaceAll', replaceAll.toString());
-      
-      Array.from(files).forEach(file => {
-        formData.append('images', file);
-      });
-
-      const response = await fetch('/api/admin/slideshow', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setStatus({ type: 'success', message: result.message || 'Upload complete.' });
-        await loadImages(); // Reload images
-        // Signal to ImageViewer to refresh
-        localStorage.setItem('slideshowUpdated', 'true');
-        window.dispatchEvent(new StorageEvent('storage', { key: 'slideshowUpdated' }));
-      } else {
-        const error = await response.json();
-        setStatus({ type: 'error', message: `Error uploading: ${error.error}` });
+      const fileArray = Array.from(files).filter(f => /\.(png|jpe?g)$/i.test(f.name));
+      if (fileArray.length === 0) {
+        setStatus({ type: 'error', message: 'No supported images found (png, jpg, jpeg).' });
+        return;
       }
+
+      // Enforce client-side limits
+      if (fileArray.length > MAX_FILES) {
+        setStatus({ type: 'error', message: `Too many files selected. Maximum is ${MAX_FILES}.` });
+        return;
+      }
+      const totalBytes = fileArray.reduce((sum, f) => sum + f.size, 0);
+      const totalMB = Math.round((totalBytes / (1024 * 1024)) * 10) / 10;
+      if (totalMB > MAX_TOTAL_SIZE_MB) {
+        setStatus({ type: 'error', message: `Selection is ${totalMB}MB. Maximum total upload size is ${MAX_TOTAL_SIZE_MB}MB.` });
+        return;
+      }
+      const tooLarge = fileArray.filter(f => f.size > MAX_FILE_SIZE_MB * 1024 * 1024);
+      if (tooLarge.length > 0) {
+        const names = tooLarge.slice(0, 3).map(f => `"${f.name}"`).join(', ') + (tooLarge.length > 3 ? '…' : '');
+        setStatus({ type: 'error', message: `Some files exceed ${MAX_FILE_SIZE_MB}MB per file: ${names}` });
+        return;
+      }
+
+      // Upload each file in its own request to avoid 413 payload errors
+      for (let index = 0; index < fileArray.length; index++) {
+        const file = fileArray[index];
+        const formData = new FormData();
+        // Only clear existing images on the first request if replaceAll is true
+        formData.append('replaceAll', (replaceAll && index === 0).toString());
+        formData.append('images', file);
+
+        const response = await fetch('/api/admin/slideshow', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          // Some server errors (e.g., 413) return non-JSON bodies
+          let message = `Upload failed for "${file.name}" (${response.status})`;
+          try {
+            const maybeJson = await response.json();
+            if (maybeJson?.error) message = maybeJson.error;
+          } catch {
+            try {
+              const text = await response.text();
+              if (text) message = text.slice(0, 200);
+            } catch {}
+          }
+          if (response.status === 413) {
+            message = `Upload too large. Try fewer files or smaller images (max ${MAX_FILE_SIZE_MB}MB per file, ${MAX_TOTAL_SIZE_MB}MB total).`;
+          }
+          setStatus({ type: 'error', message });
+          // Stop further uploads on first failure
+          return;
+        }
+      }
+
+      setStatus({ type: 'success', message: `${fileArray.length} image(s) uploaded successfully.` });
+      await loadImages();
+      // Signal to ImageViewer to refresh
+      localStorage.setItem('slideshowUpdated', 'true');
+      window.dispatchEvent(new StorageEvent('storage', { key: 'slideshowUpdated' }));
     } catch (error) {
       console.error('Error uploading files:', error);
       setStatus({ type: 'error', message: 'Error uploading files' });
@@ -348,6 +393,7 @@ export default function SlideshowManager({ onClose }: SlideshowManagerProps) {
           <li>• <strong>Upload Folder:</strong> Replaces all existing images</li>
           <li>• <strong>Add Images:</strong> Adds new images to existing slideshow</li>
           <li>• <strong>Scroll:</strong> Scroll in the image gallery to see all slides</li>
+          <li>• <strong>Limits:</strong> Max {MAX_FILES} files, {MAX_FILE_SIZE_MB}MB per file, {MAX_TOTAL_SIZE_MB}MB total per upload</li>
         </ul>
       </div>
 
