@@ -16,14 +16,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 
-    // Create JWT token (valid for 24 hours)
+    // Create JWT token (valid for 1 year - maximum practical duration)
     const token = jwt.sign(
       { 
         authenticated: true, 
         timestamp: Date.now() 
       },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '365d' }
     );
 
     return NextResponse.json({ 
