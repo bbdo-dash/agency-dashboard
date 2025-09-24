@@ -744,7 +744,7 @@ export default function Home() {
               </div>
               
               {/* Content */}
-              <div className="relative h-full w-full z-10 flex flex-col p-6 pt-4 pb-1">
+              <div className="relative h-full w-full z-10 flex flex-col p-7 pt-4 pb-6">
                 <div className="flex items-center justify-end mb-3">
                   <h2 className="font-bold text-xl md:text-2xl lg:text-[1.6rem] xl:text-[1.8rem] 2xl:text-[2.1rem] uppercase text-gray-900 dark:text-white leading-tight"
                        style={{
