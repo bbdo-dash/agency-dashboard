@@ -23,13 +23,11 @@ export const isAuthenticated = (): boolean => {
 export const authenticatedFetch = async (url: string, options: RequestInit = {}) => {
   const token = getAuthToken();
   
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-  };
+  const headers = new Headers(options.headers);
+  headers.set('Content-Type', 'application/json');
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   return fetch(url, {
@@ -52,7 +50,7 @@ export const validateToken = async (): Promise<boolean> => {
 
     const data = await response.json();
     return data.valid === true;
-  } catch (error) {
+  } catch {
     return false;
   }
 };

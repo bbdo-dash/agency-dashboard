@@ -12,14 +12,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify JWT token
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as { authenticated?: boolean };
     
     if (decoded.authenticated) {
       return NextResponse.json({ valid: true, decoded });
     } else {
       return NextResponse.json({ valid: false }, { status: 401 });
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json({ valid: false }, { status: 401 });
   }
 }

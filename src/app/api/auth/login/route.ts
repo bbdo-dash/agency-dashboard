@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       success: true, 
       token: token 
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }
