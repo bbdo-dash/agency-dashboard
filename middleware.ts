@@ -12,9 +12,6 @@ export function middleware(request: NextRequest) {
   const isPublicPath =
     pathname.startsWith('/pass') ||
     pathname.startsWith('/api/auth/password') ||
-    pathname.startsWith('/api/news') ||
-    pathname.startsWith('/api/dashboard') ||
-    pathname.startsWith('/api/health') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/static') ||
     pathname.startsWith('/images') ||
@@ -24,8 +21,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/favicon.ico') ||
     pathname.startsWith('/robots.txt') ||
     pathname.startsWith('/sitemap.xml') ||
-    pathname.startsWith('/vercel.svg') ||
-    pathname.startsWith('/api/admin/slideshow'); // allow slideshow images (blob URLs are external anyway)
+    pathname.startsWith('/vercel.svg');
 
   if (isPublicPath) {
     return NextResponse.next();
