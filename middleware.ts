@@ -28,6 +28,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Check for existing session cookie first
   const cookie = request.cookies.get(AUTH_COOKIE)?.value;
   if (cookie === AUTH_COOKIE_VALUE) {
     return NextResponse.next();
@@ -43,26 +44,27 @@ export function middleware(request: NextRequest) {
 
       // Accept any username, only validate password
       if (providedPassword === PASSWORD) {
-        const res = NextResponse.next();
+        const response = NextResponse.next();
         // Set session cookie (expires when browser closes)
-        res.cookies.set(AUTH_COOKIE, AUTH_COOKIE_VALUE, {
+        response.cookies.set(AUTH_COOKIE, AUTH_COOKIE_VALUE, {
           httpOnly: true,
-          secure: true,
+          secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
           path: '/',
         });
-        return res;
+        return response;
       }
     } catch (e) {
       // fall through to challenge
     }
   }
 
-  // Issue Basic Auth challenge
+  // Issue Basic Auth challenge - this will show browser login dialog
   return new NextResponse('Authentication required', {
     status: 401,
     headers: {
-      'WWW-Authenticate': 'Basic realm="Agency Dashboard", charset="UTF-8"',
+      'WWW-Authenticate': 'Basic realm="Agency Dashboard"',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
     },
   });
 }
