@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     // Set httpOnly session cookie (expires when browser closes)
     response.cookies.set(AUTH_COOKIE, AUTH_COOKIE_VALUE, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
       // No maxAge = session cookie that expires when browser closes

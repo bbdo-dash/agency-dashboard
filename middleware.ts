@@ -4,7 +4,6 @@ import type { NextRequest } from 'next/server';
 // Cookie name used for simple password-gate
 const AUTH_COOKIE = 'site_auth';
 const AUTH_COOKIE_VALUE = 'verified';
-const PASSWORD = 'Dumf7r-xok3yn';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -28,17 +27,31 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for existing session cookie first
-  const cookie = request.cookies.get(AUTH_COOKIE)?.value;
-  if (cookie === AUTH_COOKIE_VALUE) {
+  // Check for authentication cookie
+  const authCookie = request.cookies.get(AUTH_COOKIE)?.value;
+  
+  // If user is authenticated, allow access
+  if (authCookie === AUTH_COOKIE_VALUE) {
     return NextResponse.next();
   }
 
-  // Redirect to password page - more reliable than Basic Auth
+  // User is not authenticated - redirect to password page
   const url = request.nextUrl.clone();
   url.pathname = '/pass';
   url.searchParams.set('from', pathname);
-  return NextResponse.redirect(url);
+  
+  const response = NextResponse.redirect(url);
+  
+  // Set a temporary cookie to prevent redirect loops
+  response.cookies.set('auth_redirect', 'true', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60, // 1 minute
+  });
+  
+  return response;
 }
 
 export const config = {
