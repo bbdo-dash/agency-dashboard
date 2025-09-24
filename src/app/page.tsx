@@ -198,6 +198,20 @@ export default function Home() {
   const [currentFeedIndex, setCurrentFeedIndex] = useState(0);
   const [instagramFeeds, setInstagramFeeds] = useState<{ title: string; posts: InstagramPost[] }[]>([]);
   const [isFeedAnimating, setIsFeedAnimating] = useState(false);
+  // Show 3 posts at a time from the latest 6 loaded per feed
+  const [currentFeedPage, setCurrentFeedPage] = useState(0); // 0 => first 3, 1 => next 3
+
+  // Resolve image src: proxy only for instagram/fbcdn hosts
+  const resolveImageSrc = (url: string) => {
+    try {
+      const u = new URL(url);
+      const host = u.hostname;
+      const needsProxy = /instagram\.|fbcdn\.net/i.test(host);
+      return needsProxy ? `/api/proxy-image?u=${encodeURIComponent(url)}` : url;
+    } catch {
+      return url;
+    }
+  };
 
   // After data is loaded, extract the feeds
   useEffect(() => {
@@ -215,7 +229,9 @@ export default function Home() {
       
       // Wait for fade out animation
       setTimeout(() => {
+        // Move to next feed and reset page to 0
         setCurrentFeedIndex((prevIndex) => (prevIndex + 1) % instagramFeeds.length);
+        setCurrentFeedPage(0);
         
         // Wait a bit before fading back in
         setTimeout(() => {
@@ -226,6 +242,19 @@ export default function Home() {
     
     return () => clearInterval(feedInterval);
   }, [instagramFeeds.length]);
+
+  // Within the same feed, flip between page 0 (first 3) and page 1 (next 3) every 10s
+  useEffect(() => {
+    if (!instagramFeeds[currentFeedIndex] || instagramFeeds[currentFeedIndex].posts.length <= 3) return;
+    const pageInterval = setInterval(() => {
+      setIsFeedAnimating(true);
+      setTimeout(() => {
+        setCurrentFeedPage((prev) => (prev === 0 ? 1 : 0));
+        setTimeout(() => setIsFeedAnimating(false), 300);
+      }, 500);
+    }, 10000);
+    return () => clearInterval(pageInterval);
+  }, [currentFeedIndex, instagramFeeds]);
 
   // Get the current feed to display
   const currentFeed = instagramFeeds[currentFeedIndex] || { title: 'Social Media', posts: [] };
@@ -729,26 +758,24 @@ export default function Home() {
                 <div className="relative z-20 flex-grow flex flex-col py-0">
                   {currentFeed.posts && currentFeed.posts.length > 0 ? (
                     <div className="grid grid-cols-3 gap-3 sm:gap-3 h-full pb-0">
-                      {currentFeed.posts.slice(0, 3).map((post, index) => (
+                      {currentFeed.posts
+                        .slice(currentFeedPage * 3, currentFeedPage * 3 + 3)
+                        .map((post, index) => (
                         <div 
                           key={`instagram-post-${index}-${post.id}`} 
-                          className="flex flex-col bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm overflow-hidden"
+                          className="flex flex-col bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm overflow-hidden h-full"
                           style={{ 
-                            height: 'calc(100% - 10px)', 
-                            marginTop: '5px', 
-                            marginBottom: '5px',
                             opacity: isFeedAnimating ? 0 : 1,
                             transform: isFeedAnimating ? 'translateY(20px)' : 'translateY(0)',
                             transition: `opacity 500ms ease-out ${index * 150}ms, transform 500ms ease-out ${index * 150}ms`
                           }}
                         >
-                          {/* Image container with fixed ratio */}
+                          {/* Image container with fixed 4:5 ratio and date overlay */}
                           <div 
-                            className="relative overflow-hidden flex-shrink-0" 
-                            style={{ height: '70%' }}
+                            className="relative overflow-hidden flex-shrink-0 aspect-[4/5] w-full"
                           >
                             <Image
-                              src={post.imageUrl}
+                              src={resolveImageSrc(post.imageUrl)}
                               alt={post.caption}
                               fill
                               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 350px"
@@ -758,27 +785,26 @@ export default function Home() {
                                 const target = e.target as HTMLImageElement;
                                 target.src = '/images/breaking-news-fallback.svg';
                               }}
-                              unoptimized={post.imageUrl.startsWith('data:')}
+                            unoptimized
+                            // Ensure browser keeps images while rotating
+                            loading="eager"
+                            referrerPolicy="no-referrer"
                             />
+                            {/* Bottom gradient + date */}
+                            <div className="absolute inset-x-0 bottom-0 h-7 bg-gradient-to-t from-black/50 to-transparent"></div>
+                            <div className="absolute bottom-1 left-2 text-[10px] sm:text-xs font-semibold text-white drop-shadow">
+                              {new Date(post.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </div>
                           </div>
                           
                           {/* Caption and metadata below image */}
                           <div 
-                            className="p-2 pt-2 pb-1.5 bg-white flex flex-col justify-between min-h-[60px]" 
-                            style={{ height: '40%' }}
+                            className="p-2 pt-2 pb-2 bg-white flex flex-col justify-between flex-1"
                           >
-                            <p className="text-xs sm:text-sm md:text-sm lg:text-xs xl:text-sm text-gray-900 line-clamp-2 lg:line-clamp-2 xl:line-clamp-3 mb-1">
-                              {post.caption.length > 55 ? `${post.caption.substring(0, 55)}...` : post.caption}
+                            <p className="text-[10px] sm:text-xs md:text-sm lg:text-xs xl:text-sm text-gray-900 leading-tight mb-1 overflow-hidden line-clamp-2 sm:line-clamp-3 md:line-clamp-3 lg:line-clamp-2 xl:line-clamp-3">
+                              {post.caption}
                             </p>
-                            
-                            <div className="flex items-center mt-auto">
-                              <span className="text-xs lg:text-xs xl:text-sm text-gray-500 font-medium">
-                                {new Date(post.timestamp).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric'
-                                })}
-                              </span>
-                            </div>
+
                           </div>
                         </div>
                       ))}
